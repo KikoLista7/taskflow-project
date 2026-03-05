@@ -1,0 +1,125 @@
+:root {
+  --color-bg: #0f172a;
+  --color-surface: #1e293b;
+  --color-high: #ef4444;
+  --color-medium: #f59e0b;
+  --color-low: #10b981;
+
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+
+  --spacing: 1rem;
+  --radius: 12px;
+  --transition: 0.3s ease;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: system-ui, sans-serif;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--text-main);
+}
+
+header {
+  padding: var(--spacing);
+  background: var(--color-surface);
+  text-align: center;
+  border-bottom: 1px solid #334155;
+  transition: background var(--transition);
+}
+
+header:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+main {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: 250px;
+  background: var(--color-surface);
+  padding: var(--spacing);
+  border-right: 1px solid #334155;
+}
+
+.sidebar ul {
+  list-style: none;
+  margin-top: var(--spacing);
+}
+
+.sidebar li {
+  margin-bottom: 0.5rem;
+  color: var(--text-muted);
+  transition: color var(--transition), background var(--transition);
+}
+
+.sidebar li:hover {
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius);
+}
+
+.tasks {
+  flex: 1;
+  padding: var(--spacing);
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.task-card {
+  background: rgba(255, 255, 255, 0.1);
+  padding: var(--spacing);
+  border-radius: var(--radius);
+  transition: transform var(--transition), box-shadow var(--transition), background var(--transition);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.task-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
+
+.task-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.badge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.high .badge {
+  background: var(--color-high);
+}
+
+.medium .badge {
+  background: var(--color-medium);
+}
+
+.low .badge {
+  background: var(--color-low);
+}
+
+@media (max-width: 768px) {
+  main {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid #334155;
+  }
+}
