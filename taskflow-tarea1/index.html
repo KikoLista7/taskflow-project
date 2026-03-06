@@ -1,57 +1,113 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>TaskFlow UI</title>
-  <link rel="stylesheet" href="style.css">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Mis tareas</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+
+<script>
+tailwind.config = {
+  darkMode: 'class'
+}
+</script>
+
 </head>
-<body>
 
-  <header>
-    <h1>TaskFlow</h1>
-  </header>
+<body class="bg-slate-900 text-white dark:bg-white dark:text-black transition-colors duration-300">
 
-  <main>
+<header class="bg-slate-800 dark:bg-gray-200 p-4 text-center shadow">
+<h1 class="text-3xl font-bold">Mis tareas</h1>
 
-    <aside class="sidebar">
-      <h2>Categorías</h2>
-      <ul>
-        <li><a href="#">Trabajo</a></li>
-        <li><a href="#">Personal</a></li>
-        <li><a href="#">Estudios</a></li>
-      </ul>
-    </aside>
+<button onclick="toggleDark()" class="mt-3 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 rounded transition">
+Cambiar modo
+</button>
 
-    <section class="tasks">
+</header>
 
-      <div class="task-card high">
-        <div class="task-header">
-          <h3>Completar proyecto</h3>
-          <span class="badge">Alta</span>
-        </div>
-        <p>Finalizar las actividades pendientes antes de la fecha límite.</p>
-      </div>
+<main class="flex min-h-screen">
 
-      <div class="task-card medium">
-        <div class="task-header">
-          <h3>Actividad física</h3>
-          <span class="badge">Media</span>
-        </div>
-        <p>Realizar ejercicios programados para mantener la salud.</p>
-      </div>
+<aside class="w-64 bg-slate-800 dark:bg-gray-100 p-4">
 
-      <div class="task-card low">
-        <div class="task-header">
-          <h3>Revisar compras</h3>
-          <span class="badge">Baja</span>
-        </div>
-        <p>Comparar precios y opciones antes de realizar la compra.</p>
-      </div>
+<h2 class="text-xl font-semibold mb-4">Categorías</h2>
 
-    </section>
+<ul class="space-y-2 text-gray-300 dark:text-gray-700">
 
-  </main>
+<li class="hover:text-white cursor-pointer">Trabajo</li>
+<li class="hover:text-white cursor-pointer">Personal</li>
+<li class="hover:text-white cursor-pointer">Estudios</li>
+
+</ul>
+
+</aside>
+
+<section class="flex-1 p-6 space-y-6">
+
+<div class="bg-slate-800 dark:bg-gray-200 p-4 rounded shadow hover:scale-105 transition">
+
+<div class="flex justify-between items-center">
+
+<h3 class="font-bold text-lg">Completar proyecto</h3>
+
+<span class="bg-red-500 text-white px-2 py-1 rounded text-sm">Alta</span>
+
+</div>
+
+<p class="text-gray-300 dark:text-gray-700 mt-2">
+Finalizar las actividades pendientes antes de la fecha límite.
+</p>
+
+</div>
+
+
+<div class="bg-slate-800 dark:bg-gray-200 p-4 rounded shadow hover:scale-105 transition">
+
+<div class="flex justify-between items-center">
+
+<h3 class="font-bold text-lg">Actividad física</h3>
+
+<span class="bg-yellow-500 text-white px-2 py-1 rounded text-sm">Media</span>
+
+</div>
+
+<p class="text-gray-300 dark:text-gray-700 mt-2">
+Realizar ejercicios programados para mantener la salud.
+</p>
+
+</div>
+
+
+<div class="bg-slate-800 dark:bg-gray-200 p-4 rounded shadow hover:scale-105 transition">
+
+<div class="flex justify-between items-center">
+
+<h3 class="font-bold text-lg">Revisar compras</h3>
+
+<span class="bg-green-500 text-white px-2 py-1 rounded text-sm">Baja</span>
+
+</div>
+
+<p class="text-gray-300 dark:text-gray-700 mt-2">
+Comparar precios y opciones antes de realizar la compra.
+</p>
+
+</div>
+
+</section>
+
+</main>
+
+<script>
+
+function toggleDark(){
+
+document.documentElement.classList.toggle("dark")
+
+}
+
+</script>
 
 </body>
 </html>
