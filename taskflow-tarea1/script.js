@@ -909,14 +909,22 @@ window.onload = function(){
     modoBtn.textContent = "☀️"
   }
 
-  cargarTareas()
+  const tareasGuardadas = localStorage.getItem("tareas");
 
-  const hayOrden = localStorage.getItem("ordenGrupos")
-  if(hayOrden){
-    cargarOrden()
-  }else{
-    cargarTareasIniciales()
+  // Lógica de carga mejorada:
+  // Si la clave "tareas" NO EXISTE, es la primera vez que el usuario entra.
+  if (tareasGuardadas === null) {
+    cargarTareasIniciales();
+  } 
+  // Si la clave SÍ EXISTE (aunque sea una lista vacía "[]"), cargamos lo que haya.
+  else {
+    cargarTareas(); // Carga las tareas en memoria (puede ser un array vacío)
+    cargarOrden();  // Intenta renderizar las tareas según el orden guardado
   }
+
+  // ¡LA CLAVE DEL ARREGLO!
+  // Después de haber intentado cargar todo, comprobamos si el contenedor está vacío.
+  mostrarMensajeVacio();
 
   new Sortable(taskContainer,{
     animation:200,
