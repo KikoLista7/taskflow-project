@@ -496,16 +496,28 @@ tareas = JSON.parse(datos)
 }
 
 function cargarTareasIniciales(){
-crearTareaEnDOM("Compra","Verduras","baja", false)
-crearTareaEnDOM("Compra","Detergente","media", false)
-crearTareaEnDOM("Compra","Traje para fin de año","alta", false)
+const tarea1 = crearTareaObjeto("Compra", "Verduras", "baja")
+const tarea2 = crearTareaObjeto("Compra", "Detergente", "media")
+const tarea3 = crearTareaObjeto("Compra", "Traje para fin de año", "alta")
+const tarea4 = crearTareaObjeto("Ejercicio", "Salir a correr 10 km", "media")
+const tarea5 = crearTareaObjeto("Ejercicio", "Ir al gimnasio por la mañana", "alta")
+const tarea6 = crearTareaObjeto("Ejercicio", "Partido de pádel el finde", "baja")
+const tarea7 = crearTareaObjeto("Trabajo", "Terminar el proyecto antes del viernes", "alta")
+const tarea8 = crearTareaObjeto("Trabajo", "Presentar el prototipo de la página", "media")
 
-crearTareaEnDOM("Ejercicio","Salir a correr 10 km","media", false)
-crearTareaEnDOM("Ejercicio","Ir al gimnasio por la mañana","alta", false)
-crearTareaEnDOM("Ejercicio","Partido de pádel el finde","baja", false)
+tareas.push(tarea1, tarea2, tarea3, tarea4, tarea5, tarea6, tarea7, tarea8)
 
-crearTareaEnDOM("Trabajo","Terminar el proyecto antes del viernes","alta", false)
-crearTareaEnDOM("Trabajo","Presentar el prototipo de la página","media", false)
+crearTareaEnDOM("Compra", "Verduras", "baja", false)
+crearTareaEnDOM("Compra", "Detergente", "media", false)
+crearTareaEnDOM("Compra", "Traje para fin de año", "alta", false)
+crearTareaEnDOM("Ejercicio", "Salir a correr 10 km", "media", false)
+crearTareaEnDOM("Ejercicio", "Ir al gimnasio por la mañana", "alta", false)
+crearTareaEnDOM("Ejercicio", "Partido de pádel el finde", "baja", false)
+crearTareaEnDOM("Trabajo", "Terminar el proyecto antes del viernes", "alta", false)
+crearTareaEnDOM("Trabajo", "Presentar el prototipo de la página", "media", false)
+
+guardarTareas()
+guardarOrden()
 }
 
 function buscar(texto){
