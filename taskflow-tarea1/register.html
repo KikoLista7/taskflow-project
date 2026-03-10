@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Regístrate en TaskFlow para vincular tu cuenta.">
+<title>TaskFlow - Registro</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { darkMode: 'class' }
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const modo = localStorage.getItem("modo");
+  if (modo === "dark") document.documentElement.classList.add("dark");
+  const toggle = document.getElementById("modoRegisterBtn");
+  if (toggle) toggle.textContent = document.documentElement.classList.contains("dark") ? "☀️" : "🌙";
+});
+
+function toggleDarkRegister() {
+  document.documentElement.classList.toggle("dark");
+  const esOscuro = document.documentElement.classList.contains("dark");
+  localStorage.setItem("modo", esOscuro ? "dark" : "light");
+  const boton = document.getElementById("modoRegisterBtn");
+  if (boton) boton.textContent = esOscuro ? "☀️" : "🌙";
+}
+
+function manejarRegistro(event) {
+  event.preventDefault();
+  const nombreInput = document.getElementById("nombre");
+  const emailInput = document.getElementById("email");
+  const passwordInput = document.getElementById("password");
+  const password2Input = document.getElementById("password2");
+  const errorBox = document.getElementById("errorRegister");
+
+  const nombre = nombreInput.value.trim();
+  const email = emailInput.value.trim();
+  const pass1 = passwordInput.value.trim();
+  const pass2 = password2Input.value.trim();
+
+  errorBox.textContent = "";
+  errorBox.classList.add("hidden");
+
+  let mensajeError = "";
+  if (!nombre) {
+    mensajeError = "Por favor introduce tu nombre.";
+  } else if (!email) {
+    mensajeError = "Por favor introduce tu correo electrónico.";
+  } else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+    mensajeError = "El formato del correo no es válido.";
+  } else if (!pass1 || pass1.length < 6) {
+    mensajeError = "La contraseña debe tener al menos 6 caracteres.";
+  } else if (pass1 !== pass2) {
+    mensajeError = "Las contraseñas no coinciden.";
+  }
+
+  if (mensajeError) {
+    errorBox.textContent = mensajeError;
+    errorBox.classList.remove("hidden");
+    [nombreInput, emailInput, passwordInput, password2Input].forEach(el => el.classList.add("ring-2", "ring-red-500"));
+    setTimeout(() => {
+      [nombreInput, emailInput, passwordInput, password2Input].forEach(el => el.classList.remove("ring-2", "ring-red-500"));
+    }, 2000);
+    return;
+  }
+
+  // Demo: marcar como "registrado" y volver al login con el email recordado
+  localStorage.setItem("taskflow_email", email);
+  window.location.href = "login.html";
+}
+</script>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-indigo-950 via-slate-900 to-black text-white 
+dark:from-gray-100 dark:via-gray-200 dark:to-gray-300 dark:text-black 
+transition-colors duration-500 flex items-center justify-center px-4">
+
+<div class="w-full max-w-md">
+  <header class="flex justify-between items-center mb-6">
+    <a href="login.html" class="inline-flex items-center gap-2 text-sm text-white/80 dark:text-black/70 hover:text-white dark:hover:text-black transition">
+      <span class="text-lg">←</span>
+      <span>Volver a acceso</span>
+    </a>
+    <button id="modoRegisterBtn" type="button" onclick="toggleDarkRegister()" aria-label="Cambiar modo oscuro/claro" class="text-2xl hover:scale-110 transition-transform">
+      🌙
+    </button>
+  </header>
+
+  <main class="backdrop-blur-md bg-white/5 dark:bg-black/10 border border-white/10 rounded-2xl shadow-2xl p-6">
+    <h1 class="text-xl font-semibold tracking-tight">Crear cuenta</h1>
+    <p class="text-xs text-white/70 dark:text-black/60 mt-1">Vincula tu correo para acceder desde cualquier dispositivo.</p>
+
+    <form id="formRegister" class="space-y-4 mt-5" novalidate onsubmit="manejarRegistro(event)">
+      <div>
+        <label for="nombre" class="block text-sm mb-1">Nombre</label>
+        <input
+          id="nombre"
+          type="text"
+          autocomplete="name"
+          placeholder="Tu nombre"
+          class="w-full px-3 py-2 rounded-lg bg-white/10 dark:bg-black/5 border border-white/20 focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-white/60 dark:placeholder-black/50"
+          required
+        />
+      </div>
+
+      <div>
+        <label for="email" class="block text-sm mb-1">Correo electrónico</label>
+        <input
+          id="email"
+          type="email"
+          autocomplete="email"
+          placeholder="tucorreo@ejemplo.com"
+          class="w-full px-3 py-2 rounded-lg bg-white/10 dark:bg-black/5 border border-white/20 focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-white/60 dark:placeholder-black/50"
+          required
+        />
+      </div>
+
+      <div>
+        <label for="password" class="block text-sm mb-1">Contraseña</label>
+        <input
+          id="password"
+          type="password"
+          autocomplete="new-password"
+          placeholder="Mínimo 6 caracteres"
+          class="w-full px-3 py-2 rounded-lg bg-white/10 dark:bg-black/5 border border-white/20 focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-white/60 dark:placeholder-black/50"
+          required
+        />
+      </div>
+
+      <div>
+        <label for="password2" class="block text-sm mb-1">Repite la contraseña</label>
+        <input
+          id="password2"
+          type="password"
+          autocomplete="new-password"
+          placeholder="Repite la contraseña"
+          class="w-full px-3 py-2 rounded-lg bg-white/10 dark:bg-black/5 border border-white/20 focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-white/60 dark:placeholder-black/50"
+          required
+        />
+      </div>
+
+      <p id="errorRegister" class="hidden text-sm text-red-300 dark:text-red-600 bg-red-500/20 dark:bg-red-200/40 border border-red-400/50 rounded-lg px-3 py-2"></p>
+
+      <button
+        type="submit"
+        class="w-full bg-indigo-500 hover:bg-indigo-600 hover:scale-[1.02] active:scale-95 transition-all duration-200 text-white py-2.5 rounded-lg font-medium shadow-lg"
+      >
+        Crear cuenta
+      </button>
+    </form>
+
+    <p class="mt-4 text-xs text-white/60 dark:text-black/60 text-center">
+      Demo: este registro no crea usuarios reales todavía, pero deja preparado el flujo para implementarlo después.
+    </p>
+  </main>
+</div>
+
+</body>
+</html>
+
