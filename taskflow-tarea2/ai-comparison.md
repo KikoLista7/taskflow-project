@@ -88,7 +88,9 @@ console.log("C");
 Resultado:
 
 A
+
 C
+
 B
 
 Aunque el setTimeout tenga 0 ms, siempre espera a que el stack esté vacío.
@@ -100,12 +102,15 @@ El hoisting es el comportamiento por el cual JavaScript mueve las declaraciones 
 ·Ejemplo con var
 
 console.log(a);
+
 var a = 5;
 
     - JS lo interpreta como:
 
 var a;
+
 console.log(a);
+
 a = 5;
 
     - Resultado:
@@ -501,7 +506,7 @@ console.log(buscarUsuario("Pedro")); // null
 function buscarUsuario(nombre) {
 
     return usuarios.find(usuario => usuario.nombre === nombre) || null;
-    
+
 }
 
 ### Conclusión
