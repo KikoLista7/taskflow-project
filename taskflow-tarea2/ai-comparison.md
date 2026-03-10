@@ -142,13 +142,19 @@ document.getElementById("miElemento").innerHTML = "Hola, mundo!";
 ChatGPT ofrece una respuesta notablemente más extensa y estructurada. Utiliza secciones claramente diferenciadas con títulos, subtítulos, emojis y tablas resumen que facilitan la lectura rápida. Claude, por su parte, presenta explicaciones más concisas y directas, sin elementos visuales adicionales.
 
 - Profundidad de las explicaciones:
+
 · Closures: Ambos explican el concepto correctamente con ejemplos similares (función contador). ChatGPT añade valor al detallar paso a paso "qué está pasando" y listar casos de uso prácticos (variables privadas, factory functions, React hooks). Claude menciona los beneficios (funciones privadas, mantener estado) pero de forma más resumida.
+
 · Event Loop: ChatGPT desglosa el proceso en 5 pasos claros y proporciona un ejemplo con setTimeout que demuestra visualmente el comportamiento asíncrono. Claude explica el concepto correctamente pero de manera más teórica, usando la metáfila de "una fila de tareas" sin ejemplo de código ejecutable.
+
 · Hoisting: ChatGPT profundiza mostrando la diferencia entre var, let y const, introduciendo el concepto de Temporal Dead Zone (TDZ). Claude no cubre este concepto en su respuesta.
 
 - Claridad y didáctica:
+
 ChatGPT adopta un tono más pedagógico, explicando "qué está pasando" línea por línea y usando emojis para destacar puntos clave. Incluye una tabla resumen final muy útil para repasar. Claude es más directo y profesional, ideal para quien busca información rápida sin adornos.
+
 · Ejemplos de código: ChatGPT proporciona ejemplos completos con resultados esperados en los tres conceptos. Claude incluye código en closures y DOM, pero solo describe conceptualmente el Event Loop sin demostración práctica.
+
 · Conclusión: Para aprender desde cero o consolidar conocimientos, ChatGPT resulta más completo y didáctico gracias a su estructura detallada, ejemplos ejecutables y explicaciones paso a paso. Claude es más eficiente para consultas rápidas cuando ya se tiene una base, ofreciendo definiciones precisas sin información redundante. En este caso concreto, ChatGPT aporta mayor valor educativo para un estudiante que necesita comprender conceptos técnicos en profundidad.
 
 ## Detección de errores
