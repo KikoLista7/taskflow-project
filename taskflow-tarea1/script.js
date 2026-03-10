@@ -111,7 +111,9 @@ contenedor.appendChild(grupo)
 
 grupo.querySelector(".btn-editar").onclick = function(){ editarGrupo(tipo) }
 grupo.querySelector(".btn-eliminar").onclick = function(){ confirmarEliminarGrupo(tipo) }
-grupo.querySelector(".btn-agregar-subtarea").onclick = function(){ agregarSubtarea(tipo) }
+const btnAgregar = grupo.querySelector(".btn-agregar-subtarea")
+btnAgregar.setAttribute("aria-label", "Añadir subtarea a " + tipo)
+btnAgregar.onclick = function(){ agregarSubtarea(tipo) }
 
 activarSortableLista(grupo.querySelector(".lista"))
 mostrarMensajeVacio()
@@ -643,11 +645,13 @@ crearTareaEnDOM(tipo, textoSubtarea, "baja")
 guardarTareas()
 guardarOrden()
 }
-inputContainer.replaceWith(botonAgregar)
+const nuevoBoton = crearBotonAgregarSubtarea(tipo)
+inputContainer.replaceWith(nuevoBoton)
 }
 
 const cancelar = () => {
-inputContainer.replaceWith(botonAgregar)
+const nuevoBoton = crearBotonAgregarSubtarea(tipo)
+inputContainer.replaceWith(nuevoBoton)
 }
 
 inputContainer.querySelector(".btn-guardar-subtarea").onclick = guardarSubtarea
@@ -664,6 +668,18 @@ cancelar()
 input.addEventListener("blur", () => {
 setTimeout(cancelar, 200)
 })
+}
+
+function crearBotonAgregarSubtarea(tipo){
+const boton = document.createElement("button")
+boton.className = "btn-agregar-subtarea mt-3 w-full bg-white/5 hover:bg-white/10 dark:bg-black/5 dark:hover:bg-black/10 border border-white/20 hover:border-indigo-400 rounded-lg py-2 text-sm transition-all flex items-center justify-center gap-1 group"
+boton.setAttribute("aria-label", "Añadir subtarea a " + tipo)
+boton.innerHTML = `
+<span class="text-lg leading-none group-hover:scale-110 transition-transform">+</span>
+<span class="leading-none">Añadir subtarea</span>
+`
+boton.onclick = function(){ agregarSubtarea(tipo) }
+return boton
 }
 
 function cambiarPrioridad(item, badge){
