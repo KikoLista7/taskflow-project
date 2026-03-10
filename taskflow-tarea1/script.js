@@ -30,21 +30,47 @@ const tipo = document.getElementById("tipoInput").value.trim()
 const tarea = document.getElementById("tareaInput").value.trim()
 const prioridad = document.getElementById("prioridadInput").value
 
-if(!tipo || !tarea || !prioridad) {
-if(!prioridad){
-document.getElementById("prioridadInput").classList.add("ring-2", "ring-red-500")
-setTimeout(()=>{
-document.getElementById("prioridadInput").classList.remove("ring-2", "ring-red-500")
-},1500)
+const tipoInput = document.getElementById("tipoInput")
+const tareaInput = document.getElementById("tareaInput")
+const prioridadInput = document.getElementById("prioridadInput")
+
+let hayError = false
+
+if(!tipo){
+tipoInput.classList.add("ring-2", "ring-red-500", "animate-heartbeat")
+hayError = true
+}else{
+tipoInput.classList.remove("ring-2", "ring-red-500", "animate-heartbeat")
 }
+
+if(!tarea){
+tareaInput.classList.add("ring-2", "ring-red-500", "animate-heartbeat")
+hayError = true
+}else{
+tareaInput.classList.remove("ring-2", "ring-red-500", "animate-heartbeat")
+}
+
+if(!prioridad){
+prioridadInput.classList.add("ring-2", "ring-red-500", "animate-heartbeat")
+hayError = true
+}else{
+prioridadInput.classList.remove("ring-2", "ring-red-500", "animate-heartbeat")
+}
+
+if(hayError){
+setTimeout(()=>{
+tipoInput.classList.remove("ring-2", "ring-red-500", "animate-heartbeat")
+tareaInput.classList.remove("ring-2", "ring-red-500", "animate-heartbeat")
+prioridadInput.classList.remove("ring-2", "ring-red-500", "animate-heartbeat")
+},2500)
 return
 }
 
 crearTareaEnDOM(tipo, tarea, prioridad)
 
-document.getElementById("tipoInput").value = ""
-document.getElementById("tareaInput").value = ""
-document.getElementById("prioridadInput").value = ""
+tipoInput.value = ""
+tareaInput.value = ""
+prioridadInput.value = ""
 
 const nuevaTarea = crearTareaObjeto(tipo, tarea, prioridad)
 tareas.push(nuevaTarea)
@@ -65,15 +91,25 @@ grupo.innerHTML = `
 <div class="flex items-center gap-2 cursor-move handle group">
 <span class="opacity-0 group-hover:opacity-40 transition text-sm">⋮⋮</span>
 <h2 class="text-xl font-semibold tracking-wide">${tipo}</h2>
+<button class="btn-editar ml-2 text-gray-400 hover:text-indigo-400 transition transform hover:scale-110" title="Editar grupo">
+<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+</svg>
+</button>
 </div>
-<button onclick="confirmarEliminarGrupo('${tipo}')" class="text-red-400 hover:text-red-500 transition transform hover:scale-110 hover:rotate-6">
+<button class="btn-eliminar text-red-400 hover:text-red-500 transition transform hover:scale-110 hover:rotate-6">
 🗑️
 </button>
 </div>
 <ul class="space-y-2 lista"></ul>
 `
 contenedor.appendChild(grupo)
+
+grupo.querySelector(".btn-editar").onclick = function(){ editarGrupo(tipo) }
+grupo.querySelector(".btn-eliminar").onclick = function(){ confirmarEliminarGrupo(tipo) }
+
 activarSortableLista(grupo.querySelector(".lista"))
+mostrarMensajeVacio()
 }
 
 const lista = grupo.querySelector(".lista")
@@ -87,7 +123,7 @@ baja: {color: "bg-green-500", borde: "border-green-500"}
 const {color, borde} = colores[prioridad]
 
 const item = document.createElement("li")
-item.className = `flex justify-between items-start border-l-4 ${borde} bg-white/10 dark:bg-black/10 p-3 rounded-lg backdrop-blur-md hover:bg-white/20 dark:hover:bg-black/20 transition`
+item.className = `flex justify-between items-center gap-3 border-l-4 ${borde} bg-white/10 dark:bg-black/10 p-3 rounded-lg backdrop-blur-md hover:bg-white/20 dark:hover:bg-black/20 transition`
 item.dataset.tipo = tipo
 item.dataset.tarea = tarea
 item.dataset.prioridad = prioridad
@@ -98,17 +134,23 @@ item.style.transform="translateY(10px)"
 }
 
 item.innerHTML=`
-<div class="flex items-center gap-2">
-<input type="checkbox" onclick="completarTarea(this)" class="cursor-pointer" ${completada ? 'checked' : ''}>
-<span class="flex-1 break-words ${completada ? 'line-through opacity-50' : ''}">${tarea}</span>
-<span class="${color} text-white px-2 rounded text-xs">${prioridad}</span>
+<div class="flex items-center gap-2 flex-1 min-w-0">
+<input type="checkbox" onclick="completarTarea(this)" class="cursor-pointer flex-shrink-0" ${completada ? 'checked' : ''}>
+<span class="tarea-texto break-words cursor-pointer hover:bg-white/10 dark:hover:bg-black/20 hover:px-2 hover:py-1 hover:rounded transition-all ${completada ? 'line-through opacity-50' : ''}" title="Doble clic para editar">${tarea}</span></div>
+<div class="flex items-center gap-2 flex-shrink-0">
+<span class="${color} text-white px-2 py-0.5 rounded text-xs whitespace-nowrap">${prioridad}</span>
+<button onclick="confirmarEliminarTarea(this)" class="text-red-500 hover:text-red-700 transition text-lg font-bold leading-none w-6 h-6 flex items-center justify-center">−</button>
 </div>
-<button onclick="confirmarEliminarTarea(this)" class="text-red-500 hover:text-red-700 transition">−</button>
 `
 
 if(completada){
 item.classList.add("opacity-60")
 }
+
+const spanTarea = item.querySelector(".tarea-texto")
+spanTarea.addEventListener("dblclick", function(){
+editarTarea(item, spanTarea)
+})
 
 lista.appendChild(item)
 actualizarProgreso()
@@ -120,6 +162,207 @@ item.style.transform="translateY(0)"
 item.style.transition="all 0.3s ease"
 },10)
 }
+}
+
+function editarGrupo(nombreActual){
+const grupo = document.getElementById("grupo-"+nombreActual)
+if(!grupo) return
+
+const h2 = grupo.querySelector("h2")
+const textoOriginal = h2.textContent
+
+const input = document.createElement("input")
+input.type = "text"
+input.value = textoOriginal
+input.className = "bg-white/20 dark:bg-black/30 border border-indigo-400 rounded px-2 py-1 text-xl font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500"
+input.style.width = "200px"
+
+h2.replaceWith(input)
+input.focus()
+input.select()
+
+const guardarCambios = () => {
+const nuevoNombre = input.value.trim()
+if(nuevoNombre && nuevoNombre !== textoOriginal){
+
+const grupoExistente = document.getElementById("grupo-"+nuevoNombre)
+if(grupoExistente && grupoExistente !== grupo){
+const tareasActuales = Array.from(grupo.querySelectorAll("li"))
+const listaExistente = grupoExistente.querySelector(".lista")
+
+tareasActuales.forEach(li => {
+li.dataset.tipo = nuevoNombre
+listaExistente.appendChild(li)
+})
+
+tareas.forEach(t => {
+if(t.tipo === nombreActual){
+t.tipo = nuevoNombre
+}
+})
+
+grupo.remove()
+guardarTareas()
+guardarOrden()
+mostrarMensajeVacio()
+return
+}
+
+tareas.forEach(t => {
+if(t.tipo === nombreActual){
+t.tipo = nuevoNombre
+}
+})
+
+grupo.id = "grupo-"+nuevoNombre
+grupo.dataset.tipo = nuevoNombre
+
+const nuevoH2 = document.createElement("h2")
+nuevoH2.className = "text-xl font-semibold tracking-wide"
+nuevoH2.textContent = nuevoNombre
+input.replaceWith(nuevoH2)
+
+const botonEditar = grupo.querySelector(".btn-editar")
+botonEditar.onclick = function(){ editarGrupo(nuevoNombre) }
+
+const botonEliminar = grupo.querySelector(".btn-eliminar")
+botonEliminar.onclick = function(){ confirmarEliminarGrupo(nuevoNombre) }
+
+grupo.querySelectorAll("li").forEach(li => {
+li.dataset.tipo = nuevoNombre
+})
+
+guardarTareas()
+guardarOrden()
+} else {
+const nuevoH2 = document.createElement("h2")
+nuevoH2.className = "text-xl font-semibold tracking-wide"
+nuevoH2.textContent = textoOriginal
+input.replaceWith(nuevoH2)
+}
+}
+
+input.addEventListener("keydown", (e) => {
+if(e.key === "Enter"){
+guardarCambios()
+} else if(e.key === "Escape"){
+const nuevoH2 = document.createElement("h2")
+nuevoH2.className = "text-xl font-semibold tracking-wide"
+nuevoH2.textContent = textoOriginal
+input.replaceWith(nuevoH2)
+}
+})
+
+input.addEventListener("blur", guardarCambios)
+}
+
+function editarTarea(item, spanTarea){
+const tareaOriginal = item.dataset.tarea
+const tipo = item.dataset.tipo
+const prioridad = item.dataset.prioridad
+
+const input = document.createElement("input")
+input.type = "text"
+input.value = spanTarea.textContent
+input.className = "bg-white/20 dark:bg-black/30 border border-indigo-400 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 flex-1"
+
+spanTarea.replaceWith(input)
+input.focus()
+input.select()
+
+const guardarCambios = () => {
+const nuevaTarea = input.value.trim()
+if(nuevaTarea && nuevaTarea !== tareaOriginal){
+const tareaObj = tareas.find(t => t.tipo === tipo && t.tarea === tareaOriginal && t.prioridad === prioridad)
+if(tareaObj){
+tareaObj.tarea = nuevaTarea
+guardarTareas()
+}
+
+item.dataset.tarea = nuevaTarea
+
+const nuevoSpan = document.createElement("span")
+nuevoSpan.className = spanTarea.className.replace('line-through opacity-50', '').trim()
+if(item.querySelector('input[type="checkbox"]').checked){
+nuevoSpan.className += ' line-through opacity-50'
+}
+nuevoSpan.textContent = nuevaTarea
+nuevoSpan.title = "Doble clic para editar ✏️"
+nuevoSpan.addEventListener("dblclick", function(){
+editarTarea(item, nuevoSpan)
+})
+input.replaceWith(nuevoSpan)
+
+guardarOrden()
+} else if(nuevaTarea === tareaOriginal){
+const nuevoSpan = document.createElement("span")
+nuevoSpan.className = spanTarea.className
+nuevoSpan.textContent = tareaOriginal
+nuevoSpan.title = "Doble clic para editar ✏️"
+nuevoSpan.addEventListener("dblclick", function(){
+editarTarea(item, nuevoSpan)
+})
+input.replaceWith(nuevoSpan)
+} else {
+const nuevoSpan = document.createElement("span")
+nuevoSpan.className = spanTarea.className
+nuevoSpan.textContent = tareaOriginal
+nuevoSpan.title = "Doble clic para editar ✏️"
+nuevoSpan.addEventListener("dblclick", function(){
+editarTarea(item, nuevoSpan)
+})
+input.replaceWith(nuevoSpan)
+}
+}
+
+input.addEventListener("keydown", (e) => {
+if(e.key === "Enter"){
+guardarCambios()
+} else if(e.key === "Escape"){
+const nuevoSpan = document.createElement("span")
+nuevoSpan.className = spanTarea.className
+nuevoSpan.textContent = tareaOriginal
+nuevoSpan.title = "Doble clic para editar ✏️"
+nuevoSpan.addEventListener("dblclick", function(){
+editarTarea(item, nuevoSpan)
+})
+input.replaceWith(nuevoSpan)
+}
+})
+
+input.addEventListener("blur", guardarCambios)
+}
+
+function mostrarMensajeVacio(){
+const contenedor = document.getElementById("taskContainer")
+const mensaje = document.getElementById("mensajeVacio")
+if(contenedor.children.length === 0){
+mensaje.classList.remove("hidden")
+}else{
+mensaje.classList.add("hidden")
+}
+}
+
+function eliminarTarea(tipo, tarea, item){
+tareas = tareas.filter(t => !(t.tipo === tipo && t.tarea === tarea))
+guardarTareas()
+guardarOrden()
+
+item.remove()
+actualizarProgreso()
+cerrarModal()
+mostrarMensajeVacio()
+}
+
+function eliminarGrupo(tipo){
+tareas = tareas.filter(t => t.tipo !== tipo)
+guardarTareas()
+guardarOrden()
+
+document.getElementById("grupo-"+tipo).remove()
+actualizarProgreso()
+cerrarModal()
+mostrarMensajeVacio()
 }
 
 function confirmarEliminarTarea(boton){
