@@ -1,260 +1,376 @@
 function toggleDark(){
 document.documentElement.classList.toggle("dark")
-
 const boton = document.getElementById("modoBtn")
-
 if(document.documentElement.classList.contains("dark")){
 boton.textContent="☀️"
+localStorage.setItem("modo","dark")
 }else{
 boton.textContent="🌙"
+localStorage.setItem("modo","light")
 }
 }
 
 const contenedor = document.getElementById("taskContainer")
+let tareas = []
+let ordenGrupos = []
+
+function crearTareaObjeto(tipo, tarea, prioridad, completada = false){
+return{
+id: Date.now() + Math.random(),
+tipo: tipo,
+tarea: tarea,
+prioridad: prioridad,
+completed: completada,
+createdAt: new Date().toISOString()
+}
+}
 
 function agregarTarea(){
-
-const tipo = document.getElementById("tipoInput").value
-const tarea = document.getElementById("tareaInput").value
+const tipo = document.getElementById("tipoInput").value.trim()
+const tarea = document.getElementById("tareaInput").value.trim()
 const prioridad = document.getElementById("prioridadInput").value
 
-if(!tipo || !tarea) return
+if(!tipo || !tarea || !prioridad) {
+if(!prioridad){
+document.getElementById("prioridadInput").classList.add("ring-2", "ring-red-500")
+setTimeout(()=>{
+document.getElementById("prioridadInput").classList.remove("ring-2", "ring-red-500")
+},1500)
+}
+return
+}
 
+crearTareaEnDOM(tipo, tarea, prioridad)
+
+document.getElementById("tipoInput").value = ""
+document.getElementById("tareaInput").value = ""
+document.getElementById("prioridadInput").value = ""
+
+const nuevaTarea = crearTareaObjeto(tipo, tarea, prioridad)
+tareas.push(nuevaTarea)
+guardarTareas()
+guardarOrden()
+}
+
+function crearTareaEnDOM(tipo, tarea, prioridad, animacion = true, completada = false){
 let grupo = document.getElementById("grupo-"+tipo)
 
 if(!grupo){
-
 grupo = document.createElement("div")
-
 grupo.id = "grupo-"+tipo
-
 grupo.className = "bg-white/5 dark:bg-black/10 backdrop-blur-md p-4 rounded-xl shadow-lg"
-
+grupo.dataset.tipo = tipo
 grupo.innerHTML = `
 <div class="flex justify-between items-center mb-2 cursor-move handle">
-
 <div class="flex items-center gap-2 cursor-move handle group">
-
 <span class="opacity-0 group-hover:opacity-40 transition text-sm">⋮⋮</span>
-
 <h2 class="text-xl font-semibold tracking-wide">${tipo}</h2>
-
 </div>
-
-<button onclick="eliminarGrupo('${tipo}')" class="text-red-400 hover:text-red-500 transition transform hover:scale-110 hover:rotate-6">
-
+<button onclick="confirmarEliminarGrupo('${tipo}')" class="text-red-400 hover:text-red-500 transition transform hover:scale-110 hover:rotate-6">
 🗑️
-
 </button>
-
 </div>
-
 <ul class="space-y-2 lista"></ul>
 `
-
 contenedor.appendChild(grupo)
-
 activarSortableLista(grupo.querySelector(".lista"))
-
 }
 
 const lista = grupo.querySelector(".lista")
 
-let color=""
-let borde=""
-
-if(prioridad=="alta"){
-color="bg-red-500"
-borde="border-red-500"
+const colores = {
+alta: {color: "bg-red-500", borde: "border-red-500"},
+media: {color: "bg-yellow-500", borde: "border-yellow-500"},
+baja: {color: "bg-green-500", borde: "border-green-500"}
 }
 
-if(prioridad=="media"){
-color="bg-yellow-500"
-borde="border-yellow-500"
-}
-
-if(prioridad=="baja"){
-color="bg-green-500"
-borde="border-green-500"
-}
+const {color, borde} = colores[prioridad]
 
 const item = document.createElement("li")
+item.className = `flex justify-between items-start border-l-4 ${borde} bg-white/10 dark:bg-black/10 p-3 rounded-lg backdrop-blur-md hover:bg-white/20 dark:hover:bg-black/20 transition`
+item.dataset.tipo = tipo
+item.dataset.tarea = tarea
+item.dataset.prioridad = prioridad
 
+if(animacion){
 item.style.opacity="0"
 item.style.transform="translateY(10px)"
-
-item.className=`flex justify-between items-start border-l-4 ${borde} bg-white/10 dark:bg-black/10 p-3 rounded-lg backdrop-blur-md hover:bg-white/20 dark:hover:bg-black/20 transition`
+}
 
 item.innerHTML=`
-
 <div class="flex items-center gap-2">
-
-<input type="checkbox" onclick="completarTarea(this)">
-
-<span class="flex-1 break-words">${tarea}</span>
-
+<input type="checkbox" onclick="completarTarea(this)" class="cursor-pointer" ${completada ? 'checked' : ''}>
+<span class="flex-1 break-words ${completada ? 'line-through opacity-50' : ''}">${tarea}</span>
 <span class="${color} text-white px-2 rounded text-xs">${prioridad}</span>
-
 </div>
-
-<button onclick="this.parentElement.remove()" class="text-red-500">-</button>
-
+<button onclick="confirmarEliminarTarea(this)" class="text-red-500 hover:text-red-700 transition">−</button>
 `
 
-lista.appendChild(item)
+if(completada){
+item.classList.add("opacity-60")
+}
 
+lista.appendChild(item)
+actualizarProgreso()
+
+if(animacion){
 setTimeout(()=>{
 item.style.opacity="1"
 item.style.transform="translateY(0)"
 item.style.transition="all 0.3s ease"
 },10)
+}
+}
 
+function confirmarEliminarTarea(boton){
+const modal = document.createElement("div")
+modal.className = "fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+modal.innerHTML = `
+<div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-2xl max-w-sm mx-4 transform scale-95 opacity-0 transition-all duration-200">
+<h3 class="text-lg font-semibold mb-3 text-gray-900 dark:text-white">¿Está seguro de eliminar esta tarea?</h3>
+<p class="text-sm text-gray-600 dark:text-gray-300 mb-5">Esta acción no se puede deshacer.</p>
+<div class="flex gap-3">
+<button id="btnEliminarTarea" class="flex-1 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition">
+Eliminar
+</button>
+<button onclick="cerrarModal()" class="flex-1 bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500 text-gray-800 dark:text-white px-4 py-2 rounded-lg transition">
+Cancelar
+</button>
+</div>
+</div>
+`
+document.body.appendChild(modal)
+
+const item = boton.closest("li")
+const tipo = item.dataset.tipo
+const tarea = item.dataset.tarea
+
+document.getElementById("btnEliminarTarea").onclick = function(){
+eliminarTarea(tipo, tarea, item)
+}
+
+setTimeout(()=>{
+modal.firstElementChild.classList.remove("scale-95", "opacity-0")
+modal.firstElementChild.classList.add("scale-100", "opacity-100")
+},10)
+}
+
+function confirmarEliminarGrupo(tipo){
+const modal = document.createElement("div")
+modal.className = "fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+modal.innerHTML = `
+<div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-2xl max-w-sm mx-4 transform scale-95 opacity-0 transition-all duration-200">
+<h3 class="text-lg font-semibold mb-3 text-gray-900 dark:text-white">¿Está seguro de eliminar este grupo?</h3>
+<p class="text-sm text-gray-600 dark:text-gray-300 mb-5">Se eliminarán todas las tareas del grupo "${tipo}".</p>
+<div class="flex gap-3">
+<button onclick="eliminarGrupo('${tipo}')" class="flex-1 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition">
+Eliminar
+</button>
+<button onclick="cerrarModal()" class="flex-1 bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500 text-gray-800 dark:text-white px-4 py-2 rounded-lg transition">
+Cancelar
+</button>
+</div>
+</div>
+`
+document.body.appendChild(modal)
+modal.dataset.tipo = tipo
+
+setTimeout(()=>{
+modal.firstElementChild.classList.remove("scale-95", "opacity-0")
+modal.firstElementChild.classList.add("scale-100", "opacity-100")
+},10)
+}
+
+function cerrarModal(){
+const modal = document.querySelector(".fixed.inset-0")
+if(modal){
+modal.firstElementChild.classList.add("scale-95", "opacity-0")
+setTimeout(()=>{
+modal.remove()
+},200)
+}
+}
+
+function eliminarTarea(tipo, tarea, item){
+tareas = tareas.filter(t => !(t.tipo === tipo && t.tarea === tarea))
+guardarTareas()
+guardarOrden()
+
+item.remove()
+actualizarProgreso()
+cerrarModal()
 }
 
 function eliminarGrupo(tipo){
+tareas = tareas.filter(t => t.tipo !== tipo)
+guardarTareas()
+guardarOrden()
+
 document.getElementById("grupo-"+tipo).remove()
+actualizarProgreso()
+cerrarModal()
 }
 
-function crearInicial(tipo,tarea,prioridad){
-
-let grupo = document.getElementById("grupo-"+tipo)
-
-if(!grupo){
-
-grupo = document.createElement("div")
-
-grupo.id = "grupo-"+tipo
-
-grupo.className = "bg-white/5 dark:bg-black/10 backdrop-blur-md p-4 rounded-xl shadow-lg"
-
-grupo.innerHTML = `
-<div class="flex justify-between items-center mb-2">
-
-<div class="flex items-start gap-2 flex-1 cursor-move handle group">
-
-<span class="opacity-0 group-hover:opacity-40 transition text-sm">⋮⋮</span>
-
-<h2 class="text-xl font-semibold tracking-wide">${tipo}</h2>
-
-</div>
-
-<button onclick="eliminarGrupo('${tipo}')" class="text-red-400 hover:text-red-500 transition transform hover:scale-110 hover:rotate-6">
-
-🗑️
-
-</button>
-
-</div>
-
-<ul class="space-y-2 lista"></ul>
-`
-
-contenedor.appendChild(grupo)
-
-activarSortableLista(grupo.querySelector(".lista"))
-
+function guardarTareas(){
+localStorage.setItem("tareas", JSON.stringify(tareas))
 }
 
-const lista = grupo.querySelector(".lista")
-
-let color=""
-let borde=""
-
-if(prioridad=="alta"){
-color="bg-red-500"
-borde="border-red-500"
-}
-
-if(prioridad=="media"){
-color="bg-yellow-500"
-borde="border-yellow-500"
-}
-
-if(prioridad=="baja"){
-color="bg-green-500"
-borde="border-green-500"
-}
-
-const item=document.createElement("li")
-
-item.className=`flex justify-between items-center border-l-4 ${borde} bg-white/10 dark:bg-black/10 p-2 rounded-lg hover:bg-white/20 transition`
-
-item.innerHTML=`
-
-<div class="flex items-center gap-2">
-
-<input type="checkbox" onclick="completarTarea(this)">
-
-<span class="flex-1 break-words">${tarea}</span>
-
-<span class="${color} text-white px-2 rounded text-xs">${prioridad}</span>
-
-</div>
-
-<button onclick="this.parentElement.remove()" class="text-red-500 ml-3 hover:text-red-700 transition">−</button>
-`
-
-lista.appendChild(item)
-
-if(!lista.classList.contains("sortable-applied")){
-new Sortable(lista,{
-animation:150,
-ghostClass:"opacity-50",
-chosenClass:"bg-indigo-200",
-dragClass:"rotate-1"
+function guardarOrden(){
+const grupos = Array.from(document.querySelectorAll("[id^='grupo-']"))
+ordenGrupos = grupos.map(g => {
+const tipo = g.dataset.tipo
+const lista = Array.from(g.querySelectorAll("li"))
+const tareasOrden = lista.map(li => ({
+tipo: li.dataset.tipo,
+tarea: li.dataset.tarea,
+prioridad: li.dataset.prioridad
+}))
+return {tipo, tareasOrden}
 })
-lista.classList.add("sortable-applied")
+localStorage.setItem("ordenGrupos", JSON.stringify(ordenGrupos))
 }
 
+function cargarOrden(){
+const datos = localStorage.getItem("ordenGrupos")
+if(datos){
+ordenGrupos = JSON.parse(datos)
+ordenGrupos.forEach(grupo => {
+grupo.tareasOrden.forEach(t => {
+const tareaObj = tareas.find(tarea => tarea.tipo === t.tipo && tarea.tarea === t.tarea)
+if(tareaObj){
+crearTareaEnDOM(t.tipo, t.tarea, t.prioridad, false, tareaObj.completed)
+}
+})
+})
+}
+}
+
+function cargarTareas(){
+const datos = localStorage.getItem("tareas")
+if(datos){
+tareas = JSON.parse(datos)
+}
+}
+
+function cargarTareasIniciales(){
+crearTareaEnDOM("Compra","Verduras","baja", false)
+crearTareaEnDOM("Compra","Detergente","media", false)
+crearTareaEnDOM("Compra","Traje para fin de año","alta", false)
+
+crearTareaEnDOM("Ejercicio","Salir a correr 10 km","media", false)
+crearTareaEnDOM("Ejercicio","Ir al gimnasio por la mañana","alta", false)
+crearTareaEnDOM("Ejercicio","Partido de pádel el finde","baja", false)
+
+crearTareaEnDOM("Trabajo","Terminar el proyecto antes del viernes","alta", false)
+crearTareaEnDOM("Trabajo","Presentar el prototipo de la página","media", false)
+}
+
+function buscar(texto){
+const tareas = document.querySelectorAll("li")
+tareas.forEach(t=>{
+const contenido = t.innerText.toLowerCase()
+t.style.display = contenido.includes(texto.toLowerCase()) ? "flex" : "none"
+})
+}
+
+function completarTodas(){
+const checks = document.querySelectorAll("input[type='checkbox']")
+const total = checks.length
+const completadas = document.querySelectorAll("input:checked").length
+
+checks.forEach(c=>{
+if(completadas === total){
+if(c.checked) c.click()
+}else{
+if(!c.checked) c.click()
+}
+})
 }
 
 function completarTarea(checkbox){
-
 const tarea = checkbox.closest("li")
 const texto = checkbox.nextElementSibling
 
 texto.classList.toggle("line-through")
 texto.classList.toggle("opacity-50")
-
 tarea.classList.toggle("opacity-60")
-
 tarea.classList.add("scale-95")
 
 setTimeout(()=>{
 tarea.classList.remove("scale-95")
 },150)
 
+const tipo = tarea.dataset.tipo
+const tareaTexto = tarea.dataset.tarea
+const tareaObj = tareas.find(t => t.tipo === tipo && t.tarea === tareaTexto)
+if(tareaObj){
+tareaObj.completed = checkbox.checked
+guardarTareas()
+}
+
+actualizarProgreso()
+}
+
+function actualizarProgreso(){
+const total = document.querySelectorAll("li").length
+const completadas = document.querySelectorAll("input:checked").length
+
+if(total === 0){
+const barra = document.getElementById("barraProgreso")
+barra.style.width = "0%"
+barra.style.background = "linear-gradient(90deg, #a855f7, #ec4899)"
+document.getElementById("progresoTexto").textContent = "0%"
+return
+}
+
+const porcentaje = Math.round((completadas / total) * 100)
+const barra = document.getElementById("barraProgreso")
+
+barra.style.width = porcentaje + "%"
+
+if(porcentaje < 33){
+barra.style.background = "linear-gradient(90deg, #ef4444, #f97316)"
+}else if(porcentaje < 66){
+barra.style.background = "linear-gradient(90deg, #f59e0b, #eab308)"
+}else if(porcentaje < 100){
+barra.style.background = "linear-gradient(90deg, #84cc16, #22c55e)"
+}else{
+barra.style.background = "linear-gradient(90deg, #10b981, #059669)"
+}
+
+document.getElementById("progresoTexto").textContent = porcentaje + "%"
 }
 
 function activarSortableLista(lista){
-
 new Sortable(lista,{
 animation:150,
 ghostClass:"opacity-50",
 chosenClass:"bg-indigo-200",
-dragClass:"rotate-1"
+dragClass:"rotate-1",
+onEnd: guardarOrden
 })
-
 }
 
-window.onload=function(){
+window.onload = function(){
+if(localStorage.getItem("modo") === "dark"){
+document.documentElement.classList.add("dark")
+modoBtn.textContent = "☀️"
+}
 
-crearInicial("Compra","Verduras","baja")
-crearInicial("Compra","Detergente","media")
-crearInicial("Compra","Traje para fin de año","alta")
+cargarTareas()
 
-crearInicial("Ejercicio","Salir a correr 10 km","media")
-crearInicial("Ejercicio","Ir al gimnasio por la mañana","alta")
-crearInicial("Ejercicio","Partido de pádel el finde","baja")
-
-crearInicial("Trabajo","Terminar el proyecto antes del viernes","alta")
-crearInicial("Trabajo","Presentar el prototipo de la página","media")
+const hayOrden = localStorage.getItem("ordenGrupos")
+if(hayOrden){
+cargarOrden()
+}else{
+cargarTareasIniciales()
+}
 
 new Sortable(taskContainer,{
 animation:200,
 ghostClass:"opacity-50",
 handle:".handle",
-swapThreshold:0.65
+swapThreshold:0.65,
+onEnd: guardarOrden
 })
-
 }
