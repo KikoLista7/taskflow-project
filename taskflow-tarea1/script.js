@@ -102,11 +102,16 @@ grupo.innerHTML = `
 </button>
 </div>
 <ul class="space-y-2 lista"></ul>
+<button class="btn-agregar-subtarea mt-3 w-full bg-white/5 hover:bg-white/10 dark:bg-black/5 dark:hover:bg-black/10 border border-white/20 hover:border-indigo-400 rounded-lg py-2 text-sm transition-all flex items-center justify-center gap-1 group">
+<span class="text-lg leading-none group-hover:scale-110 transition-transform">+</span>
+<span class="leading-none">Nueva tarea</span>
+</button>
 `
 contenedor.appendChild(grupo)
 
 grupo.querySelector(".btn-editar").onclick = function(){ editarGrupo(tipo) }
 grupo.querySelector(".btn-eliminar").onclick = function(){ confirmarEliminarGrupo(tipo) }
+grupo.querySelector(".btn-agregar-subtarea").onclick = function(){ agregarSubtarea(tipo) }
 
 activarSortableLista(grupo.querySelector(".lista"))
 mostrarMensajeVacio()
@@ -136,9 +141,10 @@ item.style.transform="translateY(10px)"
 item.innerHTML=`
 <div class="flex items-center gap-2 flex-1 min-w-0">
 <input type="checkbox" onclick="completarTarea(this)" class="cursor-pointer flex-shrink-0" ${completada ? 'checked' : ''}>
-<span class="tarea-texto break-words cursor-pointer hover:bg-white/10 dark:hover:bg-black/20 hover:px-2 hover:py-1 hover:rounded transition-all ${completada ? 'line-through opacity-50' : ''}" title="Doble clic para editar">${tarea}</span></div>
+<span class="tarea-texto break-words cursor-pointer hover:bg-white/10 dark:hover:bg-black/20 hover:px-2 hover:py-1 hover:rounded transition-all ${completada ? 'line-through opacity-50' : ''}" title="Doble clic para editar">${tarea}</span>
+</div>
 <div class="flex items-center gap-2 flex-shrink-0">
-<span class="${color} text-white px-2 py-0.5 rounded text-xs whitespace-nowrap">${prioridad}</span>
+<span class="prioridad-badge ${color} text-white px-2 py-0.5 rounded text-xs whitespace-nowrap cursor-pointer hover:scale-110 transition-transform" title="Clic para cambiar prioridad">${prioridad}</span>
 <button onclick="confirmarEliminarTarea(this)" class="text-red-500 hover:text-red-700 transition text-lg font-bold leading-none w-6 h-6 flex items-center justify-center">−</button>
 </div>
 `
@@ -150,6 +156,11 @@ item.classList.add("opacity-60")
 const spanTarea = item.querySelector(".tarea-texto")
 spanTarea.addEventListener("dblclick", function(){
 editarTarea(item, spanTarea)
+})
+
+const badgePrioridad = item.querySelector(".prioridad-badge")
+badgePrioridad.addEventListener("click", function(){
+cambiarPrioridad(item, badgePrioridad)
 })
 
 lista.appendChild(item)
@@ -604,6 +615,92 @@ chosenClass:"bg-indigo-200",
 dragClass:"rotate-1",
 onEnd: guardarOrden
 })
+}
+
+function agregarSubtarea(tipo){
+const grupo = document.getElementById("grupo-"+tipo)
+const lista = grupo.querySelector(".lista")
+const botonAgregar = grupo.querySelector(".btn-agregar-subtarea")
+
+const inputContainer = document.createElement("div")
+inputContainer.className = "mt-2 flex gap-2"
+inputContainer.innerHTML = `
+<input type="text" placeholder="Nueva subtarea..." class="flex-1 px-3 py-2 rounded-lg bg-white/10 border border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+<button class="btn-guardar-subtarea bg-indigo-500 hover:bg-indigo-600 px-3 rounded-lg transition">✓</button>
+<button class="btn-cancelar-subtarea bg-red-500 hover:bg-red-600 px-3 rounded-lg transition">✕</button>
+`
+
+botonAgregar.replaceWith(inputContainer)
+const input = inputContainer.querySelector("input")
+input.focus()
+
+const guardarSubtarea = () => {
+const textoSubtarea = input.value.trim()
+if(textoSubtarea){
+const nuevaTarea = crearTareaObjeto(tipo, textoSubtarea, "baja")
+tareas.push(nuevaTarea)
+crearTareaEnDOM(tipo, textoSubtarea, "baja")
+guardarTareas()
+guardarOrden()
+}
+inputContainer.replaceWith(botonAgregar)
+}
+
+const cancelar = () => {
+inputContainer.replaceWith(botonAgregar)
+}
+
+inputContainer.querySelector(".btn-guardar-subtarea").onclick = guardarSubtarea
+inputContainer.querySelector(".btn-cancelar-subtarea").onclick = cancelar
+
+input.addEventListener("keydown", (e) => {
+if(e.key === "Enter"){
+guardarSubtarea()
+} else if(e.key === "Escape"){
+cancelar()
+}
+})
+
+input.addEventListener("blur", () => {
+setTimeout(cancelar, 200)
+})
+}
+
+function cambiarPrioridad(item, badge){
+const prioridadActual = item.dataset.prioridad
+const tipo = item.dataset.tipo
+const tarea = item.dataset.tarea
+
+const rotacion = {
+"baja": "media",
+"media": "alta",
+"alta": "baja"
+}
+
+const nuevaPrioridad = rotacion[prioridadActual]
+
+const colores = {
+alta: {color: "bg-red-500", borde: "border-red-500"},
+media: {color: "bg-yellow-500", borde: "border-yellow-500"},
+baja: {color: "bg-green-500", borde: "border-green-500"}
+}
+
+item.dataset.prioridad = nuevaPrioridad
+
+badge.className = `prioridad-badge ${colores[nuevaPrioridad].color} text-white px-2 py-0.5 rounded text-xs whitespace-nowrap cursor-pointer hover:scale-110 transition-transform`
+badge.textContent = nuevaPrioridad
+
+item.className = `flex justify-between items-center gap-3 border-l-4 ${colores[nuevaPrioridad].borde} bg-white/10 dark:bg-black/10 p-3 rounded-lg backdrop-blur-md hover:bg-white/20 dark:hover:bg-black/20 transition`
+if(item.classList.contains("opacity-60")){
+item.classList.add("opacity-60")
+}
+
+const tareaObj = tareas.find(t => t.tipo === tipo && t.tarea === tarea)
+if(tareaObj){
+tareaObj.prioridad = nuevaPrioridad
+guardarTareas()
+guardarOrden()
+}
 }
 
 window.onload = function(){
