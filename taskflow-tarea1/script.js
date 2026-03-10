@@ -725,4 +725,29 @@ handle:".handle",
 swapThreshold:0.65,
 onEnd: guardarOrden
 })
+
+// Toggle del sidebar en móvil con animación
+const toggleBtn = document.getElementById("toggleSidebar")
+const sidebarContent = document.getElementById("sidebarContent")
+const iconoToggle = document.getElementById("iconoToggle")
+
+if(toggleBtn){
+toggleBtn.addEventListener("click", function(){
+if(sidebarContent.style.maxHeight && sidebarContent.style.maxHeight !== "0px"){
+// Cerrar
+sidebarContent.style.maxHeight = "0px"
+sidebarContent.style.opacity = "0"
+sidebarContent.style.paddingTop = "0"
+sidebarContent.style.paddingBottom = "0"
+iconoToggle.style.transform = "rotate(0deg)"
+} else {
+// Abrir
+sidebarContent.style.maxHeight = sidebarContent.scrollHeight + "px"
+sidebarContent.style.opacity = "1"
+sidebarContent.style.paddingTop = "1.25rem"
+sidebarContent.style.paddingBottom = "1.25rem"
+iconoToggle.style.transform = "rotate(180deg)"
+}
+})
+}
 }
