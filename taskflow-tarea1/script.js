@@ -30,16 +30,18 @@ const PRIORIDAD_COLORES = {
  * @param {string} tarea - Descripción de la tarea.
  * @param {"baja"|"media"|"alta"} prioridad - Nivel de prioridad.
  * @param {boolean} [completada=false] - Estado inicial de completado.
- * @returns {{id:number,tipo:string,tarea:string,prioridad:string,completed:boolean,createdAt:string}}
+ * @param {string} [descripcion=""] - Detalles adicionales de la tarea.
+ * @returns {{id:number,tipo:string,tarea:string,prioridad:string,completed:boolean,createdAt:string,descripcion?:string}}
  */
-function crearTareaObjeto(tipo, tarea, prioridad, completada = false){
+function crearTareaObjeto(tipo, tarea, prioridad, completada = false, descripcion = ""){
   return{
     id: Date.now() + Math.random(),
     tipo: tipo,
     tarea: tarea,
     prioridad: prioridad,
     completed: completada,
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
+    descripcion: descripcion
   }
 }
 
@@ -129,8 +131,10 @@ function agregarTarea(){
  * @param {"baja"|"media"|"alta"} prioridad - Nivel de prioridad.
  * @param {boolean} [animacion=true] - Si debe animarse la aparición.
  * @param {boolean} [completada=false] - Estado inicial de completado.
+ * @param {string} [descripcion=""] - Detalles adicionales de la tarea.
+ * @returns {{id:number,tipo:string,tarea:string,prioridad:string,completed:boolean,createdAt:string,descripcion?:string}}
  */
-function crearTareaEnDOM(tipo, tarea, prioridad, animacion = true, completada = false){
+function crearTareaEnDOM(tipo, tarea, prioridad, animacion = true, completada = false, descripcion = ""){
   let grupo = document.getElementById("grupo-"+tipo)
 
   if(!grupo){
@@ -197,6 +201,11 @@ function crearTareaEnDOM(tipo, tarea, prioridad, animacion = true, completada = 
 </div>
 `
 
+  const descripcionCaja = document.createElement("div")
+  descripcionCaja.className = "mt-2 hidden descripcion-caja"
+  descripcionCaja.innerHTML = '<textarea class="descripcion-textarea w-full px-3 py-2 rounded-lg bg-black/10 dark:bg-white/5 border border-white/15 dark:border-black/20 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-white/60 dark:placeholder-black/50" rows="2" placeholder="Añade detalles: hora, día, especificaciones..."></textarea>'
+  item.appendChild(descripcionCaja)
+
   if(completada){
     item.classList.add("opacity-60")
   }
@@ -207,6 +216,12 @@ function crearTareaEnDOM(tipo, tarea, prioridad, animacion = true, completada = 
   spanTarea.tabIndex = 0
   spanTarea.addEventListener("dblclick", function(){
     editarTarea(item, spanTarea)
+  })
+  spanTarea.addEventListener("click", function(){
+    const caja = item.querySelector(".descripcion-caja")
+    if(caja){
+      caja.classList.toggle("hidden")
+    }
   })
   spanTarea.addEventListener("keydown", function(e){
     if(e.key === "Enter" || e.key === " "){
@@ -228,6 +243,20 @@ function crearTareaEnDOM(tipo, tarea, prioridad, animacion = true, completada = 
       cambiarPrioridad(item, badgePrioridad)
     }
   })
+
+  const textareaDescripcion = item.querySelector(".descripcion-textarea")
+  if(textareaDescripcion){
+    textareaDescripcion.addEventListener("blur", function(){
+      const tipoT = item.dataset.tipo
+      const tareaT = item.dataset.tarea
+      const prioridadT = item.dataset.prioridad
+      const tareaObj = tareas.find(t => t.tipo === tipoT && t.tarea === tareaT && t.prioridad === prioridadT)
+      if(tareaObj){
+        tareaObj.descripcion = textareaDescripcion.value.trim()
+        guardarTareas()
+      }
+    })
+  }
 
   lista.appendChild(item)
   actualizarProgreso()
@@ -579,7 +608,7 @@ function cargarOrden(){
       grupo.tareasOrden.forEach(t => {
         const tareaObj = tareas.find(tarea => tarea.tipo === t.tipo && tarea.tarea === t.tarea)
         if(tareaObj){
-          crearTareaEnDOM(t.tipo, t.tarea, t.prioridad, false, tareaObj.completed)
+          crearTareaEnDOM(t.tipo, t.tarea, t.prioridad, false, tareaObj.completed, tareaObj.descripcion || "")
         }
       })
     })
