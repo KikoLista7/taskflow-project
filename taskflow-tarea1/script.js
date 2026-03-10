@@ -54,13 +54,12 @@ function agregarTarea(){
   const tarea = document.getElementById("tareaInput").value.trim()
   const prioridad = document.getElementById("prioridadInput").value
 
+  // ... (toda la sección de validación de errores es la misma) ...
   const tipoInput = document.getElementById("tipoInput")
   const tareaInput = document.getElementById("tareaInput")
   const prioridadInput = document.getElementById("prioridadInput")
 
   let hayError = false
-
-  // Validaciones básicas de campos vacíos
 
   if(!tipo){
     tipoInput.classList.add("ring-2", "ring-red-500", "animate-heartbeat")
@@ -83,7 +82,6 @@ function agregarTarea(){
     prioridadInput.classList.remove("ring-2", "ring-red-500", "animate-heartbeat")
   }
 
-  // Validación de longitud para evitar textos exagerados
   if(tipo.length > 50){
     hayError = true
     tipoInput.classList.add("ring-2", "ring-red-500", "animate-heartbeat")
@@ -93,7 +91,6 @@ function agregarTarea(){
     tareaInput.classList.add("ring-2", "ring-red-500", "animate-heartbeat")
   }
 
-  // Impedir tareas duplicadas (mismo tipo y misma descripción, sin distinguir mayúsculas/minúsculas)
   const tareaDuplicada = tareas.some(t => 
     t.tipo.toLowerCase() === tipo.toLowerCase() &&
     t.tarea.toLowerCase() === tarea.toLowerCase()
@@ -111,17 +108,21 @@ function agregarTarea(){
     },2500)
     return
   }
+  // FIN de la validación
 
-  crearTareaEnDOM(tipo, tarea, prioridad)
+  // ¡CAMBIO IMPORTANTE! Creamos el objeto primero
+  const nuevaTarea = crearTareaObjeto(tipo, tarea, prioridad);
+  tareas.push(nuevaTarea);
+  
+  // Pasamos el objeto completo a la función del DOM
+  crearTareaEnDOM(nuevaTarea);
 
-  tipoInput.value = ""
-  tareaInput.value = ""
-  prioridadInput.value = ""
+  tipoInput.value = "";
+  tareaInput.value = "";
+  prioridadInput.value = "";
 
-  const nuevaTarea = crearTareaObjeto(tipo, tarea, prioridad)
-  tareas.push(nuevaTarea)
-  guardarTareas()
-  guardarOrden()
+  guardarTareas();
+  guardarOrden();
 }
 
 /**
@@ -132,139 +133,142 @@ function agregarTarea(){
  * @param {boolean} [animacion=true] - Si debe animarse la aparición.
  * @param {boolean} [completada=false] - Estado inicial de completado.
  */
-function crearTareaEnDOM(tipo, tarea, prioridad, animacion = true, completada = false){
-  let grupo = document.getElementById("grupo-"+tipo)
+function crearTareaEnDOM(tareaObj, animacion = true) {
+  const { id, tipo, tarea, prioridad, completed, descripcion } = tareaObj;
 
-  if(!grupo){
-    grupo = document.createElement("div")
-    grupo.id = "grupo-"+tipo
-    grupo.className = "bg-white/5 dark:bg-black/10 backdrop-blur-md p-4 rounded-xl shadow-lg"
-    grupo.dataset.tipo = tipo
-    grupo.innerHTML = `
+  let grupo = document.getElementById("grupo-" + tipo);
+
+  if (!grupo) {
+      grupo = document.createElement("div");
+      grupo.id = "grupo-" + tipo;
+      grupo.className = "bg-white/5 dark:bg-black/10 backdrop-blur-md p-4 rounded-xl shadow-lg";
+      grupo.dataset.tipo = tipo;
+      grupo.innerHTML = `
 <div class="flex justify-between items-center mb-2 cursor-move handle">
-  <div class="flex items-center gap-2 cursor-move handle group">
-    <span class="opacity-0 group-hover:opacity-40 transition text-sm">⋮⋮</span>
-    <h2 class="text-xl font-semibold tracking-wide">${tipo}</h2>
-    <button class="btn-editar ml-2 text-gray-400 hover:text-indigo-400 transition transform hover:scale-110" title="Editar grupo">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-      </svg>
-    </button>
-  </div>
-  <button class="btn-eliminar text-red-400 hover:text-red-500 transition transform hover:scale-110 hover:rotate-6">
-    🗑️
+<div class="flex items-center gap-2 cursor-move handle group">
+  <span class="opacity-0 group-hover:opacity-40 transition text-sm">⋮⋮</span>
+  <h2 class="text-xl font-semibold tracking-wide">${tipo}</h2>
+  <button class="btn-editar ml-2 text-gray-400 hover:text-indigo-400 transition transform hover:scale-110" title="Editar grupo">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+    </svg>
   </button>
+</div>
+<button class="btn-eliminar text-red-400 hover:text-red-500 transition transform hover:scale-110 hover:rotate-6">
+  🗑️
+</button>
 </div>
 <ul class="space-y-2 lista"></ul>
 <button class="btn-agregar-subtarea mt-3 w-full bg-white/5 hover:bg-white/10 dark:bg-black/5 dark:hover:bg-black/10 border border-white/20 hover:border-indigo-400 rounded-lg py-2 text-sm transition-all flex items-center justify-center gap-1 group">
-  <span class="text-lg leading-none group-hover:scale-110 transition-transform">+</span>
-  <span class="leading-none">Nueva tarea</span>
+<span class="text-lg leading-none group-hover:scale-110 transition-transform">+</span>
+<span class="leading-none">Nueva tarea</span>
 </button>
-`
-    taskContainer.appendChild(grupo)
+`;
+      taskContainer.appendChild(grupo);
 
-    grupo.querySelector(".btn-editar").onclick = function(){ editarGrupo(tipo) }
-    grupo.querySelector(".btn-eliminar").onclick = function(){ confirmarEliminarGrupo(tipo) }
-    const btnAgregar = grupo.querySelector(".btn-agregar-subtarea")
-    btnAgregar.setAttribute("aria-label", "Añadir subtarea a " + tipo)
-    btnAgregar.onclick = function(){ agregarSubtarea(tipo) }
+      grupo.querySelector(".btn-editar").onclick = function () { editarGrupo(tipo); };
+      grupo.querySelector(".btn-eliminar").onclick = function () { confirmarEliminarGrupo(tipo); };
+      const btnAgregar = grupo.querySelector(".btn-agregar-subtarea");
+      btnAgregar.setAttribute("aria-label", "Añadir subtarea a " + tipo);
+      btnAgregar.onclick = function () { agregarSubtarea(tipo); };
 
-    activarSortableLista(grupo.querySelector(".lista"))
-    mostrarMensajeVacio()
+      activarSortableLista(grupo.querySelector(".lista"));
+      mostrarMensajeVacio();
   }
 
-  const lista = grupo.querySelector(".lista")
+  const lista = grupo.querySelector(".lista");
+  const { color, borde } = PRIORIDAD_COLORES[prioridad];
 
-  const {color, borde} = PRIORIDAD_COLORES[prioridad]
+  const item = document.createElement("li");
+  item.className = `flex flex-col bg-white/10 dark:bg-black/10 p-3 rounded-lg backdrop-blur-md hover:bg-white/20 dark:hover:bg-black/20 transition`;
+  item.dataset.id = id;
+  item.dataset.tipo = tipo;
+  item.dataset.tarea = tarea;
+  item.dataset.prioridad = prioridad;
 
-  const item = document.createElement("li")
-  item.className = `flex justify-between items-center gap-3 border-l-4 ${borde} bg-white/10 dark:bg-black/10 p-3 rounded-lg backdrop-blur-md hover:bg-white/20 dark:hover:bg-black/20 transition`
-  item.dataset.tipo = tipo
-  item.dataset.tarea = tarea
-  item.dataset.prioridad = prioridad
-
-  if(animacion){
-    item.style.opacity="0"
-    item.style.transform="translateY(10px)"
+  if (animacion) {
+      item.style.opacity = "0";
+      item.style.transform = "translateY(10px)";
   }
 
-  item.innerHTML=`
+  const contenidoPrincipal = document.createElement('div');
+  contenidoPrincipal.className = `flex justify-between items-center gap-3 border-l-4 ${borde} -ml-3 pl-3`;
+  contenidoPrincipal.innerHTML = `
 <div class="flex items-center gap-2 flex-1 min-w-0">
-  <input type="checkbox" onclick="completarTarea(this)" class="cursor-pointer flex-shrink-0" ${completada ? 'checked' : ''}>
-  <span class="tarea-texto break-words cursor-pointer hover:bg-white/10 dark:hover:bg-black/20 hover:px-2 hover:py-1 hover:rounded transition-all ${completada ? 'line-through opacity-50' : ''}" title="Doble clic para editar">${tarea}</span>
+<input type="checkbox" onclick="completarTarea(this)" class="cursor-pointer flex-shrink-0" ${completed ? 'checked' : ''}>
+<span class="tarea-texto break-words cursor-pointer hover:bg-white/10 dark:hover:bg-black/20 hover:px-2 hover:py-1 hover:rounded transition-all ${completed ? 'line-through opacity-50' : ''}" title="Clic para ver/ocultar descripción">${tarea}</span>
 </div>
 <div class="flex items-center gap-2 flex-shrink-0">
-  <span class="prioridad-badge ${color} text-white px-2 py-0.5 rounded text-xs whitespace-nowrap cursor-pointer hover:scale-110 transition-transform" title="Clic para cambiar prioridad">${prioridad}</span>
-  <button onclick="confirmarEliminarTarea(this)" class="text-red-500 hover:text-red-700 transition text-lg font-bold leading-none w-6 h-6 flex items-center justify-center">−</button>
+<span class="prioridad-badge ${color} text-white px-2 py-0.5 rounded text-xs whitespace-nowrap cursor-pointer hover:scale-110 transition-transform" title="Clic para cambiar prioridad">${prioridad}</span>
+<button onclick="confirmarEliminarTarea(this)" class="text-red-500 hover:text-red-700 transition text-lg font-bold leading-none w-6 h-6 flex items-center justify-center">−</button>
 </div>
-`
+`;
 
-  const descripcionCaja = document.createElement("div")
-  descripcionCaja.className = "mt-2 hidden descripcion-caja"
-  descripcionCaja.innerHTML = '<textarea class="descripcion-textarea w-full px-3 py-2 rounded-lg bg-black/10 dark:bg-white/5 border border-white/15 dark:border-black/20 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-white/60 dark:placeholder-black/50" rows="2" placeholder="Añade detalles: hora, día, especificaciones..."></textarea>'
-  item.appendChild(descripcionCaja)
+  const descripcionCaja = document.createElement("div");
+  descripcionCaja.className = "mt-2 hidden descripcion-caja transition-all duration-300";
+  descripcionCaja.innerHTML = `<textarea class="descripcion-textarea w-full px-3 py-2 rounded-lg bg-black/10 dark:bg-white/5 border border-white/15 dark:border-black/20 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-white/60 dark:placeholder-black/50" rows="2" placeholder="Añade detalles..."></textarea>`;
+  
+  const textarea = descripcionCaja.querySelector('.descripcion-textarea');
+  textarea.value = descripcion || "";
 
-  if(completada){
-    item.classList.add("opacity-60")
+  item.appendChild(contenidoPrincipal);
+  item.appendChild(descripcionCaja);
+
+  if (completed) {
+      item.classList.add("opacity-60");
   }
 
-  const spanTarea = item.querySelector(".tarea-texto")
-  // Accesibilidad: permitir activar edición con teclado
-  spanTarea.setAttribute("role", "button")
-  spanTarea.tabIndex = 0
-  spanTarea.addEventListener("dblclick", function(){
-    editarTarea(item, spanTarea)
-  })
-  spanTarea.addEventListener("click", function(){
-    const caja = item.querySelector(".descripcion-caja")
-    if(caja){
-      caja.classList.toggle("hidden")
-    }
-  })
-  spanTarea.addEventListener("keydown", function(e){
-    if(e.key === "Enter" || e.key === " "){
-      e.preventDefault()
-      editarTarea(item, spanTarea)
-    }
-  })
+  const spanTarea = item.querySelector(".tarea-texto");
+  spanTarea.setAttribute("role", "button");
+  spanTarea.tabIndex = 0;
+  adjuntarListenersAlSpan(spanTarea, item);
 
-  const badgePrioridad = item.querySelector(".prioridad-badge")
-  // Accesibilidad: hacer la prioridad operable con teclado
-  badgePrioridad.setAttribute("role", "button")
-  badgePrioridad.tabIndex = 0
-  badgePrioridad.addEventListener("click", function(){
-    cambiarPrioridad(item, badgePrioridad)
-  })
-  badgePrioridad.addEventListener("keydown", function(e){
-    if(e.key === "Enter" || e.key === " "){
-      e.preventDefault()
-      cambiarPrioridad(item, badgePrioridad)
-    }
-  })
-
-  const textareaDescripcion = item.querySelector(".descripcion-textarea")
-  if(textareaDescripcion){
-    textareaDescripcion.addEventListener("blur", function(){
-      const tipoT = item.dataset.tipo
-      const tareaT = item.dataset.tarea
-      const prioridadT = item.dataset.prioridad
-      const tareaObj = tareas.find(t => t.tipo === tipoT && t.tarea === tareaT && t.prioridad === prioridadT)
-      if(tareaObj){
-        tareaObj.descripcion = textareaDescripcion.value.trim()
-        guardarTareas()
+  const badgePrioridad = item.querySelector(".prioridad-badge");
+  badgePrioridad.setAttribute("role", "button");
+  badgePrioridad.tabIndex = 0;
+  badgePrioridad.addEventListener("click", function () {
+      cambiarPrioridad(item, badgePrioridad);
+  });
+  badgePrioridad.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          cambiarPrioridad(item, badgePrioridad);
       }
-    })
-  }
+  });
 
-  lista.appendChild(item)
-  actualizarProgreso()
+  // Evento para guardar la descripción al salir del foco
+  textarea.addEventListener("blur", function () {
+      const tareaObj = tareas.find(t => t.id == id);
+      if (tareaObj) {
+          tareaObj.descripcion = textarea.value.trim();
+          guardarTareas();
+      }
+  });
 
-  if(animacion){
-    setTimeout(()=>{
-      item.style.opacity="1"
-      item.style.transform="translateY(0)"
-      item.style.transition="all 0.3s ease"
-    },10)
+  // --- ¡NUEVO CÓDIGO AÑADIDO! ---
+  // Evento para cerrar el desplegable con Enter en escritorio
+  textarea.addEventListener("keydown", function(event) {
+      // Detecta si el dispositivo NO es táctil (probablemente escritorio)
+      const isDesktop = !('ontouchstart' in window) && !navigator.maxTouchPoints;
+
+      // Si es escritorio y se pulsa Enter (sin la tecla Shift)
+      if (isDesktop && event.key === 'Enter' && !event.shiftKey) {
+          event.preventDefault(); // Previene que se cree una nueva línea
+          this.blur(); // Dispara el evento blur para guardar el contenido
+          descripcionCaja.classList.add('hidden'); // Cierra el desplegable
+      }
+  });
+  // --- FIN DEL NUEVO CÓDIGO ---
+
+  lista.appendChild(item);
+  actualizarProgreso();
+
+  if (animacion) {
+      setTimeout(() => {
+          item.style.opacity = "1";
+          item.style.transform = "translateY(0)";
+          item.style.transition = "all 0.3s ease";
+      }, 10);
   }
 }
 
@@ -369,81 +373,88 @@ function editarGrupo(nombreActual){
  * @param {HTMLLIElement} item - Elemento de lista que representa la tarea.
  * @param {HTMLElement} spanTarea - Span que contiene el texto de la tarea.
  */
-function editarTarea(item, spanTarea){
-  const tareaOriginal = item.dataset.tarea
-  const tipo = item.dataset.tipo
-  const prioridad = item.dataset.prioridad
 
-  const input = document.createElement("input")
-  input.type = "text"
-  input.value = spanTarea.textContent
-  input.className = "bg-white/20 dark:bg-black/30 border border-indigo-400 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 flex-1"
+/**
+ * Adjunta todos los listeners necesarios (clic, doble clic, teclado) al span de una tarea.
+ * @param {HTMLElement} spanTarea - El elemento span que contiene el texto de la tarea.
+ * @param {HTMLLIElement} item - El elemento <li> padre de la tarea.
+ */
+function adjuntarListenersAlSpan(spanTarea, item) {
+  // Clic para mostrar/ocultar descripción
+  spanTarea.addEventListener("click", function () {
+      const descripcionCaja = item.querySelector(".descripcion-caja");
+      if (descripcionCaja) {
+          descripcionCaja.classList.toggle("hidden");
+      }
+  });
 
-  spanTarea.replaceWith(input)
-  input.focus()
-  input.select()
+  // Doble clic para editar el título
+  spanTarea.addEventListener("dblclick", function () {
+      editarTarea(item, spanTarea);
+  });
+
+  // Accesibilidad con teclado para editar
+  spanTarea.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          editarTarea(item, spanTarea);
+      }
+  });
+}
+
+function editarTarea(item, spanTarea) {
+  const tareaOriginal = item.dataset.tarea;
+  const tipo = item.dataset.tipo;
+  const id = item.dataset.id; // Usamos el ID para una búsqueda más segura
+
+  const input = document.createElement("input");
+  input.type = "text";
+  input.value = spanTarea.textContent;
+  input.className = "bg-white/20 dark:bg-black/30 border border-indigo-400 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 flex-1";
+
+  spanTarea.replaceWith(input);
+  input.focus();
+  input.select();
+
+  const restaurarSpan = (texto) => {
+      const nuevoSpan = document.createElement("span");
+      nuevoSpan.className = spanTarea.className; // Mantenemos las clases originales (line-through, etc.)
+      nuevoSpan.textContent = texto;
+      nuevoSpan.title = "Clic para ver/ocultar descripción";
+      
+      // ¡AQUÍ ESTÁ LA MAGIA! Re-adjuntamos TODOS los listeners al nuevo span
+      adjuntarListenersAlSpan(nuevoSpan, item);
+      
+      input.replaceWith(nuevoSpan);
+  };
 
   const guardarCambios = () => {
-    const nuevaTarea = input.value.trim()
-    if(nuevaTarea && nuevaTarea !== tareaOriginal){
-      const tareaObj = tareas.find(t => t.tipo === tipo && t.tarea === tareaOriginal && t.prioridad === prioridad)
-      if(tareaObj){
-        tareaObj.tarea = nuevaTarea
-        guardarTareas()
+      const nuevaTareaTexto = input.value.trim();
+
+      if (nuevaTareaTexto && nuevaTareaTexto !== tareaOriginal) {
+          const tareaObj = tareas.find(t => t.id == id);
+          if (tareaObj) {
+              tareaObj.tarea = nuevaTareaTexto;
+              guardarTareas();
+          }
+          item.dataset.tarea = nuevaTareaTexto;
+          restaurarSpan(nuevaTareaTexto);
+          guardarOrden();
+      } else {
+          // Si no hay cambios o el campo está vacío, restauramos el original
+          restaurarSpan(tareaOriginal);
       }
-
-      item.dataset.tarea = nuevaTarea
-
-      const nuevoSpan = document.createElement("span")
-      nuevoSpan.className = spanTarea.className.replace('line-through opacity-50', '').trim()
-      if(item.querySelector('input[type="checkbox"]').checked){
-        nuevoSpan.className += ' line-through opacity-50'
-      }
-      nuevoSpan.textContent = nuevaTarea
-      nuevoSpan.title = "Doble clic para editar ✏️"
-      nuevoSpan.addEventListener("dblclick", function(){
-        editarTarea(item, nuevoSpan)
-      })
-      input.replaceWith(nuevoSpan)
-
-      guardarOrden()
-    } else if(nuevaTarea === tareaOriginal){
-      const nuevoSpan = document.createElement("span")
-      nuevoSpan.className = spanTarea.className
-      nuevoSpan.textContent = tareaOriginal
-      nuevoSpan.title = "Doble clic para editar ✏️"
-      nuevoSpan.addEventListener("dblclick", function(){
-        editarTarea(item, nuevoSpan)
-      })
-      input.replaceWith(nuevoSpan)
-    } else {
-      const nuevoSpan = document.createElement("span")
-      nuevoSpan.className = spanTarea.className
-      nuevoSpan.textContent = tareaOriginal
-      nuevoSpan.title = "Doble clic para editar ✏️"
-      nuevoSpan.addEventListener("dblclick", function(){
-        editarTarea(item, nuevoSpan)
-      })
-      input.replaceWith(nuevoSpan)
-    }
-  }
+  };
 
   input.addEventListener("keydown", (e) => {
-    if(e.key === "Enter"){
-      guardarCambios()
-    } else if(e.key === "Escape"){
-      const nuevoSpan = document.createElement("span")
-      nuevoSpan.className = spanTarea.className
-      nuevoSpan.textContent = tareaOriginal
-      nuevoSpan.title = "Doble clic para editar ✏️"
-      nuevoSpan.addEventListener("dblclick", function(){
-        editarTarea(item, nuevoSpan)
-      })
-      input.replaceWith(nuevoSpan)
-    }
-  })
+      if (e.key === "Enter") {
+          guardarCambios();
+      } else if (e.key === "Escape") {
+          restaurarSpan(tareaOriginal);
+      }
+  });
 
-  input.addEventListener("blur", guardarCambios)
+  input.addEventListener("blur", guardarCambios);
 }
 
 /**
@@ -599,17 +610,21 @@ function guardarOrden(){
  * Reconstruye el orden de grupos y tareas a partir de los datos almacenados.
  */
 function cargarOrden(){
-  const datos = localStorage.getItem("ordenGrupos")
+  const datos = localStorage.getItem("ordenGrupos");
   if(datos){
-    ordenGrupos = JSON.parse(datos)
+    ordenGrupos = JSON.parse(datos);
+    // Limpiamos el contenedor para evitar duplicados al cargar
+    taskContainer.innerHTML = ''; 
     ordenGrupos.forEach(grupo => {
       grupo.tareasOrden.forEach(t => {
-        const tareaObj = tareas.find(tarea => tarea.tipo === t.tipo && tarea.tarea === t.tarea)
+        // Buscamos la tarea completa en nuestro array de tareas
+        const tareaObj = tareas.find(tarea => tarea.tipo === t.tipo && tarea.tarea === t.tarea);
         if(tareaObj){
-          crearTareaEnDOM(t.tipo, t.tarea, t.prioridad, false, tareaObj.completed, tareaObj.descripcion || "")
+          // Pasamos el objeto completo
+          crearTareaEnDOM(tareaObj, false);
         }
-      })
-    })
+      });
+    });
   }
 }
 
@@ -627,28 +642,26 @@ function cargarTareas(){
  * Crea un juego inicial de tareas de ejemplo cuando no existe información previa.
  */
 function cargarTareasIniciales(){
-  const tarea1 = crearTareaObjeto("Compra", "Verduras", "baja")
-  const tarea2 = crearTareaObjeto("Compra", "Detergente", "media")
-  const tarea3 = crearTareaObjeto("Compra", "Traje para fin de año", "alta")
-  const tarea4 = crearTareaObjeto("Ejercicio", "Salir a correr 10 km", "media")
-  const tarea5 = crearTareaObjeto("Ejercicio", "Ir al gimnasio por la mañana", "alta")
-  const tarea6 = crearTareaObjeto("Ejercicio", "Partido de pádel el finde", "baja")
-  const tarea7 = crearTareaObjeto("Trabajo", "Terminar el proyecto antes del viernes", "alta")
-  const tarea8 = crearTareaObjeto("Trabajo", "Presentar el prototipo de la página", "media")
+  const tareasIniciales = [
+    crearTareaObjeto("Compra", "Verduras", "baja"),
+    crearTareaObjeto("Compra", "Detergente", "media"),
+    crearTareaObjeto("Compra", "Traje para fin de año", "alta"),
+    crearTareaObjeto("Ejercicio", "Salir a correr 10 km", "media"),
+    crearTareaObjeto("Ejercicio", "Ir al gimnasio por la mañana", "alta"),
+    crearTareaObjeto("Ejercicio", "Partido de pádel el finde", "baja"),
+    crearTareaObjeto("Trabajo", "Terminar el proyecto antes del viernes", "alta"),
+    crearTareaObjeto("Trabajo", "Presentar el prototipo de la página", "media")
+  ];
 
-  tareas.push(tarea1, tarea2, tarea3, tarea4, tarea5, tarea6, tarea7, tarea8)
+  tareas.push(...tareasIniciales);
 
-  crearTareaEnDOM("Compra", "Verduras", "baja", false)
-  crearTareaEnDOM("Compra", "Detergente", "media", false)
-  crearTareaEnDOM("Compra", "Traje para fin de año", "alta", false)
-  crearTareaEnDOM("Ejercicio", "Salir a correr 10 km", "media", false)
-  crearTareaEnDOM("Ejercicio", "Ir al gimnasio por la mañana", "alta", false)
-  crearTareaEnDOM("Ejercicio", "Partido de pádel el finde", "baja", false)
-  crearTareaEnDOM("Trabajo", "Terminar el proyecto antes del viernes", "alta", false)
-  crearTareaEnDOM("Trabajo", "Presentar el prototipo de la página", "media", false)
+  // Iteramos y pasamos cada objeto a la función del DOM
+  tareasIniciales.forEach(tarea => {
+    crearTareaEnDOM(tarea, false);
+  });
 
-  guardarTareas()
-  guardarOrden()
+  guardarTareas();
+  guardarOrden();
 }
 
 /**
