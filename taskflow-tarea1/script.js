@@ -1,19 +1,37 @@
+/**
+ * Alterna entre modo claro y oscuro y persiste la preferencia en localStorage.
+ */
 function toggleDark(){
   document.documentElement.classList.toggle("dark")
   const boton = document.getElementById("modoBtn")
   if(document.documentElement.classList.contains("dark")){
-    boton.textContent="☀️"
+    boton.textContent = "☀️"
     localStorage.setItem("modo","dark")
   }else{
-    boton.textContent="🌙"
+    boton.textContent = "🌙"
     localStorage.setItem("modo","light")
   }
 }
 
-const contenedor = document.getElementById("taskContainer")
+const taskContainer = document.getElementById("taskContainer")
 let tareas = []
 let ordenGrupos = []
 
+// Colores asociados a cada nivel de prioridad
+const PRIORIDAD_COLORES = {
+  alta:  { color: "bg-red-500",    borde: "border-red-500" },
+  media: { color: "bg-yellow-500", borde: "border-yellow-500" },
+  baja:  { color: "bg-green-500",  borde: "border-green-500" }
+}
+
+/**
+ * Crea un objeto tarea normalizado listo para almacenar.
+ * @param {string} tipo - Nombre del grupo o categoría de la tarea.
+ * @param {string} tarea - Descripción de la tarea.
+ * @param {"baja"|"media"|"alta"} prioridad - Nivel de prioridad.
+ * @param {boolean} [completada=false] - Estado inicial de completado.
+ * @returns {{id:number,tipo:string,tarea:string,prioridad:string,completed:boolean,createdAt:string}}
+ */
 function crearTareaObjeto(tipo, tarea, prioridad, completada = false){
   return{
     id: Date.now() + Math.random(),
@@ -25,6 +43,10 @@ function crearTareaObjeto(tipo, tarea, prioridad, completada = false){
   }
 }
 
+/**
+ * Valida los campos del formulario principal y crea una nueva tarea.
+ * Incluye validaciones extra de longitud y duplicados.
+ */
 function agregarTarea(){
   const tipo = document.getElementById("tipoInput").value.trim()
   const tarea = document.getElementById("tareaInput").value.trim()
@@ -35,6 +57,8 @@ function agregarTarea(){
   const prioridadInput = document.getElementById("prioridadInput")
 
   let hayError = false
+
+  // Validaciones básicas de campos vacíos
 
   if(!tipo){
     tipoInput.classList.add("ring-2", "ring-red-500", "animate-heartbeat")
@@ -55,6 +79,26 @@ function agregarTarea(){
     hayError = true
   }else{
     prioridadInput.classList.remove("ring-2", "ring-red-500", "animate-heartbeat")
+  }
+
+  // Validación de longitud para evitar textos exagerados
+  if(tipo.length > 50){
+    hayError = true
+    tipoInput.classList.add("ring-2", "ring-red-500", "animate-heartbeat")
+  }
+  if(tarea.length > 200){
+    hayError = true
+    tareaInput.classList.add("ring-2", "ring-red-500", "animate-heartbeat")
+  }
+
+  // Impedir tareas duplicadas (mismo tipo y misma descripción, sin distinguir mayúsculas/minúsculas)
+  const tareaDuplicada = tareas.some(t => 
+    t.tipo.toLowerCase() === tipo.toLowerCase() &&
+    t.tarea.toLowerCase() === tarea.toLowerCase()
+  )
+  if(tareaDuplicada){
+    hayError = true
+    tareaInput.classList.add("ring-2", "ring-red-500", "animate-heartbeat")
   }
 
   if(hayError){
@@ -78,6 +122,14 @@ function agregarTarea(){
   guardarOrden()
 }
 
+/**
+ * Crea (si no existe) el grupo indicado y añade una tarea al DOM.
+ * @param {string} tipo - Nombre del grupo/categoría.
+ * @param {string} tarea - Descripción de la tarea.
+ * @param {"baja"|"media"|"alta"} prioridad - Nivel de prioridad.
+ * @param {boolean} [animacion=true] - Si debe animarse la aparición.
+ * @param {boolean} [completada=false] - Estado inicial de completado.
+ */
 function crearTareaEnDOM(tipo, tarea, prioridad, animacion = true, completada = false){
   let grupo = document.getElementById("grupo-"+tipo)
 
@@ -107,7 +159,7 @@ function crearTareaEnDOM(tipo, tarea, prioridad, animacion = true, completada = 
   <span class="leading-none">Nueva tarea</span>
 </button>
 `
-    contenedor.appendChild(grupo)
+    taskContainer.appendChild(grupo)
 
     grupo.querySelector(".btn-editar").onclick = function(){ editarGrupo(tipo) }
     grupo.querySelector(".btn-eliminar").onclick = function(){ confirmarEliminarGrupo(tipo) }
@@ -121,13 +173,7 @@ function crearTareaEnDOM(tipo, tarea, prioridad, animacion = true, completada = 
 
   const lista = grupo.querySelector(".lista")
 
-  const colores = {
-    alta: {color: "bg-red-500", borde: "border-red-500"},
-    media: {color: "bg-yellow-500", borde: "border-yellow-500"},
-    baja: {color: "bg-green-500", borde: "border-green-500"}
-  }
-
-  const {color, borde} = colores[prioridad]
+  const {color, borde} = PRIORIDAD_COLORES[prioridad]
 
   const item = document.createElement("li")
   item.className = `flex justify-between items-center gap-3 border-l-4 ${borde} bg-white/10 dark:bg-black/10 p-3 rounded-lg backdrop-blur-md hover:bg-white/20 dark:hover:bg-black/20 transition`
@@ -195,6 +241,10 @@ function crearTareaEnDOM(tipo, tarea, prioridad, animacion = true, completada = 
   }
 }
 
+/**
+ * Permite editar el nombre de un grupo y propaga los cambios a las tareas asociadas.
+ * @param {string} nombreActual - Nombre actual del grupo.
+ */
 function editarGrupo(nombreActual){
   const grupo = document.getElementById("grupo-"+nombreActual)
   if(!grupo) return
@@ -287,6 +337,11 @@ function editarGrupo(nombreActual){
   input.addEventListener("blur", guardarCambios)
 }
 
+/**
+ * Permite editar el texto de una tarea concreta y actualiza el almacenamiento.
+ * @param {HTMLLIElement} item - Elemento de lista que representa la tarea.
+ * @param {HTMLElement} spanTarea - Span que contiene el texto de la tarea.
+ */
 function editarTarea(item, spanTarea){
   const tareaOriginal = item.dataset.tarea
   const tipo = item.dataset.tipo
@@ -364,16 +419,24 @@ function editarTarea(item, spanTarea){
   input.addEventListener("blur", guardarCambios)
 }
 
+/**
+ * Muestra u oculta el mensaje vacío según haya grupos de tareas en el contenedor.
+ */
 function mostrarMensajeVacio(){
-  const contenedor = document.getElementById("taskContainer")
   const mensaje = document.getElementById("mensajeVacio")
-  if(contenedor.children.length === 0){
+  if(taskContainer.children.length === 0){
     mensaje.classList.remove("hidden")
   }else{
     mensaje.classList.add("hidden")
   }
 }
 
+/**
+ * Elimina una tarea concreta tanto del DOM como del array en memoria.
+ * @param {string} tipo - Tipo/grupo de la tarea.
+ * @param {string} tarea - Texto de la tarea.
+ * @param {HTMLLIElement} item - Elemento de lista asociado.
+ */
 function eliminarTarea(tipo, tarea, item){
   tareas = tareas.filter(t => !(t.tipo === tipo && t.tarea === tarea))
   guardarTareas()
@@ -385,6 +448,10 @@ function eliminarTarea(tipo, tarea, item){
   mostrarMensajeVacio()
 }
 
+/**
+ * Elimina un grupo completo y todas sus tareas asociadas.
+ * @param {string} tipo - Nombre del grupo a eliminar.
+ */
 function eliminarGrupo(tipo){
   tareas = tareas.filter(t => t.tipo !== tipo)
   guardarTareas()
@@ -396,6 +463,10 @@ function eliminarGrupo(tipo){
   mostrarMensajeVacio()
 }
 
+/**
+ * Abre un modal de confirmación para eliminar una única tarea.
+ * @param {HTMLButtonElement} boton - Botón que dispara la acción.
+ */
 function confirmarEliminarTarea(boton){
   const modal = document.createElement("div")
   modal.className = "fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
@@ -429,6 +500,10 @@ function confirmarEliminarTarea(boton){
   },10)
 }
 
+/**
+ * Abre un modal de confirmación para eliminar todas las tareas de un grupo.
+ * @param {string} tipo - Nombre del grupo a eliminar.
+ */
 function confirmarEliminarGrupo(tipo){
   const modal = document.createElement("div")
   modal.className = "fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
@@ -455,6 +530,9 @@ function confirmarEliminarGrupo(tipo){
   },10)
 }
 
+/**
+ * Cierra (si existe) el modal de confirmación actual.
+ */
 function cerrarModal(){
   const modal = document.querySelector(".fixed.inset-0")
   if(modal){
@@ -465,10 +543,16 @@ function cerrarModal(){
   }
 }
 
+/**
+ * Guarda el array de tareas en localStorage.
+ */
 function guardarTareas(){
   localStorage.setItem("tareas", JSON.stringify(tareas))
 }
 
+/**
+ * Guarda el orden actual de grupos y tareas dentro de cada grupo en localStorage.
+ */
 function guardarOrden(){
   const grupos = Array.from(document.querySelectorAll("[id^='grupo-']"))
   ordenGrupos = grupos.map(g => {
@@ -484,6 +568,9 @@ function guardarOrden(){
   localStorage.setItem("ordenGrupos", JSON.stringify(ordenGrupos))
 }
 
+/**
+ * Reconstruye el orden de grupos y tareas a partir de los datos almacenados.
+ */
 function cargarOrden(){
   const datos = localStorage.getItem("ordenGrupos")
   if(datos){
@@ -499,6 +586,9 @@ function cargarOrden(){
   }
 }
 
+/**
+ * Carga el listado de tareas almacenadas en localStorage en memoria.
+ */
 function cargarTareas(){
   const datos = localStorage.getItem("tareas")
   if(datos){
@@ -506,6 +596,9 @@ function cargarTareas(){
   }
 }
 
+/**
+ * Crea un juego inicial de tareas de ejemplo cuando no existe información previa.
+ */
 function cargarTareasIniciales(){
   const tarea1 = crearTareaObjeto("Compra", "Verduras", "baja")
   const tarea2 = crearTareaObjeto("Compra", "Detergente", "media")
@@ -531,6 +624,10 @@ function cargarTareasIniciales(){
   guardarOrden()
 }
 
+/**
+ * Filtra visualmente las tareas del tablero a partir de un texto de búsqueda.
+ * @param {string} texto - Texto a buscar dentro del contenido de cada tarea.
+ */
 function buscar(texto){
   const tareas = document.querySelectorAll("li")
   tareas.forEach(t=>{
@@ -539,6 +636,9 @@ function buscar(texto){
   })
 }
 
+/**
+ * Marca o desmarca todas las tareas a la vez según el estado actual.
+ */
 function completarTodas(){
   const checks = document.querySelectorAll("input[type='checkbox']")
   const total = checks.length
@@ -553,6 +653,10 @@ function completarTodas(){
   })
 }
 
+/**
+ * Marca una tarea como completada o pendiente y actualiza la barra de progreso.
+ * @param {HTMLInputElement} checkbox - Checkbox asociado a la tarea.
+ */
 function completarTarea(checkbox){
   const tarea = checkbox.closest("li")
   const texto = checkbox.nextElementSibling
@@ -577,6 +681,9 @@ function completarTarea(checkbox){
   actualizarProgreso()
 }
 
+/**
+ * Actualiza la barra y el texto de progreso general de tareas completadas.
+ */
 function actualizarProgreso(){
   const total = document.querySelectorAll("li").length
   const completadas = document.querySelectorAll("input:checked").length
@@ -619,6 +726,10 @@ function actualizarProgreso(){
   }
 }
 
+/**
+ * Activa la funcionalidad de arrastrar y soltar sobre una lista dada.
+ * @param {HTMLElement} lista - Lista UL que contendrá tareas arrastrables.
+ */
 function activarSortableLista(lista){
   new Sortable(lista,{
     animation:150,
@@ -629,6 +740,10 @@ function activarSortableLista(lista){
   })
 }
 
+/**
+ * Muestra controles en línea para añadir una nueva subtarea a un grupo existente.
+ * @param {string} tipo - Nombre del grupo al que se añade la subtarea.
+ */
 function agregarSubtarea(tipo){
   const grupo = document.getElementById("grupo-"+tipo)
   const lista = grupo.querySelector(".lista")
@@ -649,6 +764,18 @@ function agregarSubtarea(tipo){
   const guardarSubtarea = () => {
     const textoSubtarea = input.value.trim()
     if(textoSubtarea){
+      // Evitar subtareas duplicadas dentro del mismo grupo
+      const existeDuplicada = tareas.some(t => 
+        t.tipo.toLowerCase() === tipo.toLowerCase() &&
+        t.tarea.toLowerCase() === textoSubtarea.toLowerCase()
+      )
+      if(existeDuplicada){
+        input.classList.add("ring-2","ring-red-500","animate-heartbeat")
+        setTimeout(() => {
+          input.classList.remove("ring-2","ring-red-500","animate-heartbeat")
+        }, 2000)
+        return
+      }
       const nuevaTarea = crearTareaObjeto(tipo, textoSubtarea, "baja")
       tareas.push(nuevaTarea)
       crearTareaEnDOM(tipo, textoSubtarea, "baja")
@@ -680,6 +807,11 @@ function agregarSubtarea(tipo){
   })
 }
 
+/**
+ * Crea un nuevo botón "Añadir subtarea" para un grupo dado.
+ * @param {string} tipo - Nombre del grupo.
+ * @returns {HTMLButtonElement} Botón configurado para añadir subtareas.
+ */
 function crearBotonAgregarSubtarea(tipo){
   const boton = document.createElement("button")
   boton.className = "btn-agregar-subtarea mt-3 w-full bg-white/5 hover:bg-white/10 dark:bg-black/5 dark:hover:bg-black/10 border border-white/20 hover:border-indigo-400 rounded-lg py-2 text-sm transición-all flex items-center justify-center gap-1 group"
@@ -692,6 +824,11 @@ function crearBotonAgregarSubtarea(tipo){
   return boton
 }
 
+/**
+ * Cambia cíclicamente el nivel de prioridad de una tarea (baja → media → alta → baja).
+ * @param {HTMLLIElement} item - Elemento de lista de la tarea.
+ * @param {HTMLElement} badge - Elemento visual que muestra la prioridad.
+ */
 function cambiarPrioridad(item, badge){
   const prioridadActual = item.dataset.prioridad
   const tipo = item.dataset.tipo
@@ -705,18 +842,12 @@ function cambiarPrioridad(item, badge){
 
   const nuevaPrioridad = rotacion[prioridadActual]
 
-  const colores = {
-    alta: {color: "bg-red-500", borde: "border-red-500"},
-    media: {color: "bg-yellow-500", borde: "border-yellow-500"},
-    baja: {color: "bg-green-500", borde: "border-green-500"}
-  }
-
   item.dataset.prioridad = nuevaPrioridad
 
-  badge.className = `prioridad-badge ${colores[nuevaPrioridad].color} text-white px-2 py-0.5 rounded text-xs whitespace-nowrap cursor-pointer hover:scale-110 transition-transform`
+  badge.className = `prioridad-badge ${PRIORIDAD_COLORES[nuevaPrioridad].color} text-white px-2 py-0.5 rounded text-xs whitespace-nowrap cursor-pointer hover:scale-110 transition-transform`
   badge.textContent = nuevaPrioridad
 
-  item.className = `flex justify-between items-center gap-3 border-l-4 ${colores[nuevaPrioridad].borde} bg-white/10 dark:bg-black/10 p-3 rounded-lg backdrop-blur-md hover:bg-white/20 dark:hover:bg-black/20 transition`
+  item.className = `flex justify-between items-center gap-3 border-l-4 ${PRIORIDAD_COLORES[nuevaPrioridad].borde} bg-white/10 dark:bg-black/10 p-3 rounded-lg backdrop-blur-md hover:bg-white/20 dark:hover:bg-black/20 transition`
   if(item.classList.contains("opacity-60")){
     item.classList.add("opacity-60")
   }
@@ -729,6 +860,9 @@ function cambiarPrioridad(item, badge){
   }
 }
 
+/**
+ * Punto de entrada de la aplicación. Restaura modo, tareas, orden y listeners de interfaz.
+ */
 window.onload = function(){
   if(localStorage.getItem("modo") === "dark"){
     document.documentElement.classList.add("dark")
