@@ -131,10 +131,8 @@ function agregarTarea(){
  * @param {"baja"|"media"|"alta"} prioridad - Nivel de prioridad.
  * @param {boolean} [animacion=true] - Si debe animarse la aparición.
  * @param {boolean} [completada=false] - Estado inicial de completado.
- * @param {string} [descripcion=""] - Detalles adicionales de la tarea.
- * @returns {{id:number,tipo:string,tarea:string,prioridad:string,completed:boolean,createdAt:string,descripcion?:string}}
  */
-function crearTareaEnDOM(tipo, tarea, prioridad, animacion = true, completada = false, descripcion = ""){
+function crearTareaEnDOM(tipo, tarea, prioridad, animacion = true, completada = false){
   let grupo = document.getElementById("grupo-"+tipo)
 
   if(!grupo){
