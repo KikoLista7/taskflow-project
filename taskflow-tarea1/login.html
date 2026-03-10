@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Inicia sesión para sincronizar tus tareas en TaskFlow.">
+<title>TaskFlow - Acceso</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  darkMode: 'class'
+}
+</script>
+<script>
+// Sincroniza el modo oscuro/claro con la preferencia guardada
+document.addEventListener("DOMContentLoaded", function () {
+  const modo = localStorage.getItem("modo");
+  if (modo === "dark") {
+    document.documentElement.classList.add("dark");
+  }
+  const toggle = document.getElementById("modoLoginBtn");
+  if (toggle) {
+    toggle.textContent = document.documentElement.classList.contains("dark") ? "☀️" : "🌙";
+  }
+});
+
+function toggleDarkLogin() {
+  document.documentElement.classList.toggle("dark");
+  const esOscuro = document.documentElement.classList.contains("dark");
+  localStorage.setItem("modo", esOscuro ? "dark" : "light");
+  const boton = document.getElementById("modoLoginBtn");
+  if (boton) {
+    boton.textContent = esOscuro ? "☀️" : "🌙";
+  }
+}
+
+function manejarLogin(event) {
+  event.preventDefault();
+  const emailInput = document.getElementById("email");
+  const passwordInput = document.getElementById("password");
+  const recordarInput = document.getElementById("recordar");
+  const errorBox = document.getElementById("errorLogin");
+
+  const email = emailInput.value.trim();
+  const password = passwordInput.value.trim();
+
+  errorBox.textContent = "";
+  errorBox.classList.add("hidden");
+
+  let mensajeError = "";
+  if (!email) {
+    mensajeError = "Por favor introduce tu correo electrónico.";
+  } else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+    mensajeError = "El formato del correo no es válido.";
+  } else if (!password) {
+    mensajeError = "Por favor introduce tu contraseña.";
+  } else if (password.length < 6) {
+    mensajeError = "La contraseña debe tener al menos 6 caracteres.";
+  }
+
+  if (mensajeError) {
+    errorBox.textContent = mensajeError;
+    errorBox.classList.remove("hidden");
+    emailInput.classList.add("ring-2", "ring-red-500");
+    passwordInput.classList.add("ring-2", "ring-red-500");
+    setTimeout(() => {
+      emailInput.classList.remove("ring-2", "ring-red-500");
+      passwordInput.classList.remove("ring-2", "ring-red-500");
+    }, 2000);
+    return;
+  }
+
+  if (recordarInput.checked) {
+    localStorage.setItem("taskflow_email", email);
+  } else {
+    localStorage.removeItem("taskflow_email");
+  }
+
+  // Simulación de login correcto: podrías sustituir esto por una petición real en el futuro
+  localStorage.setItem("taskflow_autenticado", "1");
+
+  const boton = document.getElementById("btnAcceder");
+  boton.disabled = true;
+  boton.textContent = "Accediendo...";
+
+  setTimeout(() => {
+    window.location.href = "index.html";
+  }, 900);
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  const form = document.getElementById("formLogin");
+  if (form) {
+    form.addEventListener("submit", manejarLogin);
+  }
+
+  const emailGuardado = localStorage.getItem("taskflow_email");
+  if (emailGuardado) {
+    const emailInput = document.getElementById("email");
+    const recordarInput = document.getElementById("recordar");
+    if (emailInput) emailInput.value = emailGuardado;
+    if (recordarInput) recordarInput.checked = true;
+  }
+});
+</script>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-indigo-950 via-slate-900 to-black text-white 
+dark:from-gray-100 dark:via-gray-200 dark:to-gray-300 dark:text-black 
+transition-colors duration-500 flex items-center justify-center px-4">
+
+<div class="w-full max-w-md">
+  <header class="flex justify-between items-center mb-6">
+    <a href="index.html" class="inline-flex items-center gap-2 text-sm text-white/80 dark:text-black/70 hover:text-white dark:hover:text-black transition">
+      <span class="text-lg">←</span>
+      <span>Volver a tus tareas</span>
+    </a>
+    <button id="modoLoginBtn" type="button" onclick="toggleDarkLogin()" aria-label="Cambiar modo oscuro/claro" class="text-2xl hover:scale-110 transition-transform">
+      🌙
+    </button>
+  </header>
+
+  <main class="backdrop-blur-md bg-white/5 dark:bg-black/10 border border-white/10 rounded-2xl shadow-2xl p-6">
+    <div class="flex items-center gap-3 mb-4">
+      <div class="w-10 h-10 rounded-full border border-white/40 dark:border-black/40 bg-white/10 dark:bg-black/10 flex items-center justify-center">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-5 h-5 text-white dark:text-black">
+          <path fill="currentColor" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4Zm0 2c-3.33 0-6 1.34-6 3v1c0 .55.45 1 1 1h10c.55 0 1-.45 1-1v-1c0-1.66-2.67-3-6-3Z"/>
+        </svg>
+      </div>
+      <div>
+        <h1 class="text-xl font-semibold tracking-tight">Accede a TaskFlow</h1>
+        <p class="text-xs text-white/70 dark:text-black/60">Guarda tu progreso y personaliza tu experiencia.</p>
+      </div>
+    </div>
+
+    <form id="formLogin" class="space-y-4" novalidate>
+      <div>
+        <label for="email" class="block text-sm mb-1">Correo electrónico</label>
+        <input
+          id="email"
+          type="email"
+          autocomplete="email"
+          placeholder="tucorreo@ejemplo.com"
+          class="w-full px-3 py-2 rounded-lg bg-white/10 dark:bg-black/5 border border-white/20 focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-white/60 dark:placeholder-black/50"
+          required
+        />
+      </div>
+
+      <div>
+        <label for="password" class="block text-sm mb-1">Contraseña</label>
+        <input
+          id="password"
+          type="password"
+          autocomplete="current-password"
+          placeholder="Mínimo 6 caracteres"
+          class="w-full px-3 py-2 rounded-lg bg-white/10 dark:bg-black/5 border border-white/20 focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-white/60 dark:placeholder-black/50"
+          required
+        />
+      </div>
+
+      <div class="flex items-center justify-between text-sm">
+        <label class="inline-flex items-center gap-2 cursor-pointer select-none">
+          <input id="recordar" type="checkbox" class="rounded border-white/40 dark:border-black/50 bg-transparent" />
+          <span>Recordar correo</span>
+        </label>
+        <button type="button" class="text-indigo-300 dark:text-indigo-700 hover:text-indigo-200 dark:hover:text-indigo-800 cursor-default">
+          ¿Olvidaste tu contraseña?
+        </button>
+      </div>
+
+      <p id="errorLogin" class="hidden text-sm text-red-300 dark:text-red-600 bg-red-500/20 dark:bg-red-200/40 border border-red-400/50 rounded-lg px-3 py-2"></p>
+
+      <button
+        id="btnAcceder"
+        type="submit"
+        class="w-full bg-indigo-500 hover:bg-indigo-600 hover:scale-[1.02] active:scale-95 transition-all duration-200 text-white py-2.5 rounded-lg font-medium shadow-lg"
+      >
+        Acceder
+      </button>
+    </form>
+
+    <p class="mt-4 text-xs text-white/60 dark:text-black/60 text-center">
+      Esta pantalla de acceso es solo una demo visual. Más adelante podrás conectar tu propio sistema de cuentas.
+    </p>
+  </main>
+</div>
+
+</body>
+</html>
+
