@@ -389,6 +389,13 @@ modal.innerHTML = `
 <button id="btnEliminarTarea" class="flex-1 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition">
 Eliminar
 </button>
+<button onclick="cerrarModal()" class="flex-1 bg-gray-300 dar<div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-2xl max-w-sm mx-4 transform scale-95 opacity-0 transition-all duration-200">
+<h3 class="text-lg font-semibold mb-3 text-gray-900 dark:text-white">¿Está seguro de eliminar esta tarea?</h3>
+<p class="text-sm text-gray-600 dark:text-gray-300 mb-5">Esta acción no se puede deshacer.</p>
+<div class="flex gap-3">
+<button id="btnEliminarTarea" class="flex-1 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition">
+Eliminar
+</button>
 <button onclick="cerrarModal()" class="flex-1 bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500 text-gray-800 dark:text-white px-4 py-2 rounded-lg transition">
 Cancelar
 </button>
@@ -417,27 +424,7 @@ modal.className = "fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center 
 modal.innerHTML = `
 <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-2xl max-w-sm mx-4 transform scale-95 opacity-0 transition-all duration-200">
 <h3 class="text-lg font-semibold mb-3 text-gray-900 dark:text-white">¿Está seguro de eliminar este grupo?</h3>
-<p class="text-sm text-gray-600 dark:text-gray-300 mb-5">Se eliminarán todas las tareas del grupo "${tipo}".</p>
-<div class="flex gap-3">
-<button onclick="eliminarGrupo('${tipo}')" class="flex-1 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition">
-Eliminar
-</button>
-<button onclick="cerrarModal()" class="flex-1 bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500 text-gray-800 dark:text-white px-4 py-2 rounded-lg transition">
-Cancelar
-</button>
-</div>
-</div>
-`
-document.body.appendChild(modal)
-modal.dataset.tipo = tipo
-
-setTimeout(()=>{
-modal.firstElementChild.classList.remove("scale-95", "opacity-0")
-modal.firstElementChild.classList.add("scale-100", "opacity-100")
-},10)
-}
-
-function cerrarModal(){
+{
 const modal = document.querySelector(".fixed.inset-0")
 if(modal){
 modal.firstElementChild.classList.add("scale-95", "opacity-0")
@@ -612,37 +599,27 @@ document.getElementById("progresoTexto").textContent = porcentaje + "%"
 function activarSortableLista(lista){
 new Sortable(lista,{
 animation:150,
-ghostClass:"opacity-50",
-chosenClass:"bg-indigo-200",
-dragClass:"rotate-1",
-onEnd: guardarOrden
-})
+ghostCldocument.getElementById("progresoTexto").textContent = "0%"
+return
 }
 
-function agregarSubtarea(tipo){
-const grupo = document.getElementById("grupo-"+tipo)
-const lista = grupo.querySelector(".lista")
-const botonAgregar = grupo.querySelector(".btn-agregar-subtarea")
+const porcentaje = Math.round((completadas / total) * 100)
+const barra = document.getElementById("barraProgreso")
 
-const inputContainer = document.createElement("div")
-inputContainer.className = "mt-2 flex gap-2"
-inputContainer.innerHTML = `
-<input type="text" placeholder="Nueva subtarea..." class="flex-1 px-3 py-2 rounded-lg bg-white/10 border border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
-<button class="btn-guardar-subtarea bg-indigo-500 hover:bg-indigo-600 px-3 rounded-lg transition">✓</button>
-<button class="btn-cancelar-subtarea bg-red-500 hover:bg-red-600 px-3 rounded-lg transition">✕</button>
-`
+barra.style.width = porcentaje + "%"
 
-botonAgregar.replaceWith(inputContainer)
-const input = inputContainer.querySelector("input")
-input.focus()
+if(porcentaje < 33){
+barra.style.background = "linear-gradient(90deg, #ef4444, #f97316)"
+}else if(porcentaje < 66){
+barra.style.background = "linear-gradient(90deg, #f59e0b, #eab308)"
+}else if(porcentaje < 100){
+barra.style.background = "linear-gradient(90deg, #84cc16, #22c55e)"
+}else{
+barra.style.background = "linear-gradient(90deg, #10b981, #059669)"
+}
 
-const guardarSubtarea = () => {
-const textoSubtarea = input.value.trim()
-if(textoSubtarea){
-const nuevaTarea = crearTareaObjeto(tipo, textoSubtarea, "baja")
-tareas.push(nuevaTarea)
-crearTareaEnDOM(tipo, textoSubtarea, "baja")
-guardarTareas()
+document.getElementById("progresoTexto").textContent = porcentaje + "%"
+uardarTareas()
 guardarOrden()
 }
 const nuevoBoton = crearBotonAgregarSubtarea(tipo)
