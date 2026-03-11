@@ -1,5 +1,7 @@
 /**
- * Alterna entre modo claro y oscuro y persiste la preferencia en localStorage.
+ * Alterna el tema entre modo claro y oscuro persistiendo la preferencia en localStorage.
+ * Actualiza el icono del botón según el modo activo.
+ * @returns {void}
  */
 function toggleDark(){
   document.documentElement.classList.toggle("dark")
@@ -18,21 +20,55 @@ let tareas = []
 let ordenGrupos = []
 let sortableInstances = {};
 
-// Colores asociados a cada nivel de prioridad
+// Constantes de configuración
 const PRIORIDAD_COLORES = {
   alta:  { color: "bg-red-500",    borde: "border-red-500" },
   media: { color: "bg-yellow-500", borde: "border-yellow-500" },
   baja:  { color: "bg-green-500",  borde: "border-green-500" }
+};
+
+const VALIDACION_CONFIG = {
+  minLengthGrupo: 2,
+  maxLengthGrupo: 50,
+  minLengthTarea: 3,
+  maxLengthTarea: 200,
+  tiempoAnimacionError: 2500,
+  tiempoAnimacionModal: 200
+};
+
+/**
+ * Aplica estilos visuales de error a un elemento del formulario.
+ * @param {HTMLElement} element - Elemento a marcar como error.
+ * @param {boolean} mostrar - Si es true muestra el error, si es false lo oculta.
+ */
+function aplicarEstiloError(element, mostrar = true) {
+  if (mostrar) {
+    element.classList.add("ring-2", "ring-red-500", "animate-heartbeat");
+  } else {
+    element.classList.remove("ring-2", "ring-red-500", "animate-heartbeat");
+  }
 }
 
 /**
- * Crea un objeto tarea normalizado listo para almacenar.
+ * Limpia los estilos de error de múltiples elementos del formulario tras un delay.
+ * @param {HTMLElement[]} elements - Array de elementos a limpiar.
+ * @param {number} [delay] - Retraso en milisegundos antes de limpiar.
+ */
+function limpiarEstilosError(elements, delay = VALIDACION_CONFIG.tiempoAnimacionError) {
+  setTimeout(() => {
+    elements.forEach(el => aplicarEstiloError(el, false));
+  }, delay);
+}
+
+/**
+ * Crea un objeto tarea normalizado listo para almacenar en memoria.
+ * Genera un ID único basado en timestamp y establece la fecha de creación.
  * @param {string} tipo - Nombre del grupo o categoría de la tarea.
  * @param {string} tarea - Descripción de la tarea.
- * @param {"baja"|"media"|"alta"} prioridad - Nivel de prioridad.
+ * @param {"baja"|"media"|"alta"} prioridad - Nivel de prioridad de la tarea.
  * @param {boolean} [completada=false] - Estado inicial de completado.
  * @param {string} [descripcion=""] - Detalles adicionales de la tarea.
- * @returns {{id:number,tipo:string,tarea:string,prioridad:string,completed:boolean,createdAt:string,descripcion?:string}}
+ * @returns {Object} Objeto con propiedades: id, tipo, tarea, prioridad, completed, createdAt, descripcion.
  */
 function crearTareaObjeto(tipo, tarea, prioridad, completada = false, descripcion = ""){
   return{
@@ -48,91 +84,117 @@ function crearTareaObjeto(tipo, tarea, prioridad, completada = false, descripcio
 
 /**
  * Valida los campos del formulario principal y crea una nueva tarea.
- * Incluye validaciones extra de longitud y duplicados.
+ * Realiza validaciones de: campo vacío, longitud mínima y máxima, y duplicados.
+ * Si hay errores, los anima visualmente en rojo y limpia los estilos tras el timeout.
+ * @returns {void}
  */
 function agregarTarea(){
-  const tipo = document.getElementById("tipoInput").value.trim()
-  const tarea = document.getElementById("tareaInput").value.trim()
-  const prioridad = document.getElementById("prioridadInput").value
+  const tipo = document.getElementById("tipoInput").value.trim();
+  const tarea = document.getElementById("tareaInput").value.trim();
+  const prioridad = document.getElementById("prioridadInput").value;
 
-  // ... (toda la sección de validación de errores es la misma) ...
-  const tipoInput = document.getElementById("tipoInput")
-  const tareaInput = document.getElementById("tareaInput")
-  const prioridadInput = document.getElementById("prioridadInput")
+  const tipoInput = document.getElementById("tipoInput");
+  const tareaInput = document.getElementById("tareaInput");
+  const prioridadInput = document.getElementById("prioridadInput");
 
-  let hayError = false
+  let hayError = false;
+  const elementosConError = [];
 
-  if(!tipo){
-    tipoInput.classList.add("ring-2", "ring-red-500", "animate-heartbeat")
-    hayError = true
-  }else{
-    tipoInput.classList.remove("ring-2", "ring-red-500", "animate-heartbeat")
+  // Validar campo de tipo/grupo vacío
+  if (!tipo) {
+    aplicarEstiloError(tipoInput, true);
+    hayError = true;
+    elementosConError.push(tipoInput);
+  } else {
+    aplicarEstiloError(tipoInput, false);
   }
 
-  if(!tarea){
-    tareaInput.classList.add("ring-2", "ring-red-500", "animate-heartbeat")
-    hayError = true
-  }else{
-    tareaInput.classList.remove("ring-2", "ring-red-500", "animate-heartbeat")
+  // Validar campo de tarea vacío
+  if (!tarea) {
+    aplicarEstiloError(tareaInput, true);
+    hayError = true;
+    elementosConError.push(tareaInput);
+  } else {
+    aplicarEstiloError(tareaInput, false);
   }
 
-  if(!prioridad){
-    prioridadInput.classList.add("ring-2", "ring-red-500", "animate-heartbeat")
-    hayError = true
-  }else{
-    prioridadInput.classList.remove("ring-2", "ring-red-500", "animate-heartbeat")
+  // Validar prioridad seleccionada
+  if (!prioridad) {
+    aplicarEstiloError(prioridadInput, true);
+    hayError = true;
+    elementosConError.push(prioridadInput);
+  } else {
+    aplicarEstiloError(prioridadInput, false);
   }
 
-  if(tipo.length > 50){
-    hayError = true
-    tipoInput.classList.add("ring-2", "ring-red-500", "animate-heartbeat")
-  }
-  if(tarea.length > 200){
-    hayError = true
-    tareaInput.classList.add("ring-2", "ring-red-500", "animate-heartbeat")
+  // Validar longitud mínima de tipo
+  if (tipo.length > 0 && tipo.length < VALIDACION_CONFIG.minLengthGrupo) {
+    aplicarEstiloError(tipoInput, true);
+    hayError = true;
+    if (!elementosConError.includes(tipoInput)) elementosConError.push(tipoInput);
   }
 
+  // Validar longitud máxima de tipo
+  if (tipo.length > VALIDACION_CONFIG.maxLengthGrupo) {
+    aplicarEstiloError(tipoInput, true);
+    hayError = true;
+    if (!elementosConError.includes(tipoInput)) elementosConError.push(tipoInput);
+  }
+
+  // Validar longitud mínima de tarea
+  if (tarea.length > 0 && tarea.length < VALIDACION_CONFIG.minLengthTarea) {
+    aplicarEstiloError(tareaInput, true);
+    hayError = true;
+    if (!elementosConError.includes(tareaInput)) elementosConError.push(tareaInput);
+  }
+
+  // Validar longitud máxima de tarea
+  if (tarea.length > VALIDACION_CONFIG.maxLengthTarea) {
+    aplicarEstiloError(tareaInput, true);
+    hayError = true;
+    if (!elementosConError.includes(tareaInput)) elementosConError.push(tareaInput);
+  }
+
+  // Validar duplicados
   const tareaDuplicada = tareas.some(t => 
     t.tipo.toLowerCase() === tipo.toLowerCase() &&
     t.tarea.toLowerCase() === tarea.toLowerCase()
-  )
-  if(tareaDuplicada){
-    hayError = true
-    tareaInput.classList.add("ring-2", "ring-red-500", "animate-heartbeat")
+  );
+  if (tareaDuplicada) {
+    aplicarEstiloError(tareaInput, true);
+    hayError = true;
+    if (!elementosConError.includes(tareaInput)) elementosConError.push(tareaInput);
   }
 
-  if(hayError){
-    setTimeout(()=>{
-      tipoInput.classList.remove("ring-2", "ring-red-500", "animate-heartbeat")
-      tareaInput.classList.remove("ring-2", "ring-red-500", "animate-heartbeat")
-      prioridadInput.classList.remove("ring-2", "ring-red-500", "animate-heartbeat")
-    },2500)
-    return
+  if (hayError) {
+    limpiarEstilosError(elementosConError);
+    return;
   }
-  // FIN de la validación
 
-  // ¡CAMBIO IMPORTANTE! Creamos el objeto primero
+  // Crear objeto tarea
   const nuevaTarea = crearTareaObjeto(tipo, tarea, prioridad);
   tareas.push(nuevaTarea);
   
-  // Pasamos el objeto completo a la función del DOM
+  // Renderizar en DOM
   crearTareaEnDOM(nuevaTarea);
 
+  // Limpiar formulario
   tipoInput.value = "";
   tareaInput.value = "";
   prioridadInput.value = "";
 
+  // Guardar cambios
   guardarTareas();
   guardarOrden();
 }
 
 /**
- * Crea (si no existe) el grupo indicado y añade una tarea al DOM.
- * @param {string} tipo - Nombre del grupo/categoría.
- * @param {string} tarea - Descripción de la tarea.
- * @param {"baja"|"media"|"alta"} prioridad - Nivel de prioridad.
- * @param {boolean} [animacion=true] - Si debe animarse la aparición.
- * @param {boolean} [completada=false] - Estado inicial de completado.
+ * Crea (si no existe) el grupo indicado y añade una tarea al DOM con efectos visuales.
+ * Integra listeners para edición de tareas, cambio de prioridad, y gestión del textarea de descripción.
+ * Desactiva drag-and-drop cuando se edita la descripción para evitar conflictos.
+ * @param {Object} tareaObj - Objeto tarea con propiedades: id, tipo, tarea, prioridad, completed, descripcion.
+ * @param {boolean} [animacion=true] - Si debe animarse la aparición de la tarea.
+ * @returns {void}
  */
 function crearTareaEnDOM(tareaObj, animacion = true) {
     const { id, tipo, tarea, prioridad, completed, descripcion } = tareaObj;
@@ -273,6 +335,14 @@ function crearTareaEnDOM(tareaObj, animacion = true) {
     }
 }
 
+/**
+ * Edita el nombre de un grupo de tareas en modo inline.
+ * Permite renombrar el grupo con validaciones de duplicidad y longitud.
+ * Desactiva el arrastre durante la edición para evitar conflictos.
+ * Acepta Enter para guardar, Escape para cancelar, y blur también guarda.
+ * @param {string} nombreActual - Nombre actual del grupo a editar.
+ * @returns {void}
+ */
 function editarGrupo(nombreActual) {
   const grupo = document.getElementById("grupo-" + nombreActual);
   if (!grupo) return;
@@ -304,65 +374,96 @@ function editarGrupo(nombreActual) {
 
   const guardarCambios = () => {
       const nuevoNombre = input.value.trim();
-      if (nuevoNombre && nuevoNombre !== textoOriginal) {
-          // ... (toda la lógica de guardado es la misma)
-          const grupoExistente = document.getElementById("grupo-" + nuevoNombre);
-          if (grupoExistente && grupoExistente !== grupo) {
-              const tareasActuales = Array.from(grupo.querySelectorAll("li"));
-              const listaExistente = grupoExistente.querySelector(".lista");
+      
+      // Validación 1: Verificar que no esté vacío
+      if (!nuevoNombre) {
+          const nuevoH2 = document.createElement("h2");
+          nuevoH2.className = "text-xl font-semibold tracking-wide";
+          nuevoH2.textContent = textoOriginal;
+          input.replaceWith(nuevoH2);
+          finalizarEdicion();
+          return;
+      }
 
-              tareasActuales.forEach(li => {
-                  li.dataset.tipo = nuevoNombre;
-                  listaExistente.appendChild(li);
-              });
+      // Validación 2: Verificar que sea diferente al original
+      if (nuevoNombre === textoOriginal) {
+          const nuevoH2 = document.createElement("h2");
+          nuevoH2.className = "text-xl font-semibold tracking-wide";
+          nuevoH2.textContent = textoOriginal;
+          input.replaceWith(nuevoH2);
+          finalizarEdicion();
+          return;
+      }
 
-              tareas.forEach(t => {
-                  if (t.tipo === nombreActual) {
-                      t.tipo = nuevoNombre;
-                  }
-              });
+      // Validación 3: Verificar longitud mínima y máxima
+      if (nuevoNombre.length < VALIDACION_CONFIG.minLengthGrupo) {
+          alert(`El nombre debe tener al menos ${VALIDACION_CONFIG.minLengthGrupo} caracteres`);
+          return;
+      }
 
-              grupo.remove();
-              guardarTareas();
-              guardarOrden();
-              mostrarMensajeVacio();
-              finalizarEdicion(); // Llama a finalizar
-              return;
-          }
+      if (nuevoNombre.length > VALIDACION_CONFIG.maxLengthGrupo) {
+          alert(`El nombre no puede exceder ${VALIDACION_CONFIG.maxLengthGrupo} caracteres`);
+          return;
+      }
 
+      // Si el grupo con el nuevo nombre ya existe, fusionar tareas
+      const grupoExistente = document.getElementById("grupo-" + nuevoNombre);
+      if (grupoExistente && grupoExistente !== grupo) {
+          const tareasActuales = Array.from(grupo.querySelectorAll("li"));
+          const listaExistente = grupoExistente.querySelector(".lista");
+
+          // Mover tareas del grupo actual al existente
+          tareasActuales.forEach(li => {
+              li.dataset.tipo = nuevoNombre;
+              listaExistente.appendChild(li);
+          });
+
+          // Actualizar tipo en array de tareas
           tareas.forEach(t => {
               if (t.tipo === nombreActual) {
                   t.tipo = nuevoNombre;
               }
           });
 
-          grupo.id = "grupo-" + nuevoNombre;
-          grupo.dataset.tipo = nuevoNombre;
-
-          const nuevoH2 = document.createElement("h2");
-          nuevoH2.className = "text-xl font-semibold tracking-wide";
-          nuevoH2.textContent = nuevoNombre;
-          input.replaceWith(nuevoH2);
-
-          const botonEditar = grupo.querySelector(".btn-editar");
-          botonEditar.onclick = function () { editarGrupo(nuevoNombre); };
-
-          const botonEliminar = grupo.querySelector(".btn-eliminar");
-          botonEliminar.onclick = function () { confirmarEliminarGrupo(nuevoNombre); };
-
-          grupo.querySelectorAll("li").forEach(li => {
-              li.dataset.tipo = nuevoNombre;
-          });
-
+          grupo.remove();
           guardarTareas();
           guardarOrden();
-      } else {
-          const nuevoH2 = document.createElement("h2");
-          nuevoH2.className = "text-xl font-semibold tracking-wide";
-          nuevoH2.textContent = textoOriginal;
-          input.replaceWith(nuevoH2);
+          mostrarMensajeVacio();
+          finalizarEdicion();
+          return;
       }
-      finalizarEdicion(); // Llama a finalizar
+
+      // Actualizar datos en memoria
+      tareas.forEach(t => {
+          if (t.tipo === nombreActual) {
+              t.tipo = nuevoNombre;
+          }
+      });
+
+      // Actualizar elemento en DOM
+      grupo.id = "grupo-" + nuevoNombre;
+      grupo.dataset.tipo = nuevoNombre;
+
+      const nuevoH2 = document.createElement("h2");
+      nuevoH2.className = "text-xl font-semibold tracking-wide";
+      nuevoH2.textContent = nuevoNombre;
+      input.replaceWith(nuevoH2);
+
+      // Actualizar listeners de botones con nuevo nombre
+      const botonEditar = grupo.querySelector(".btn-editar");
+      botonEditar.onclick = function () { editarGrupo(nuevoNombre); };
+
+      const botonEliminar = grupo.querySelector(".btn-eliminar");
+      botonEliminar.onclick = function () { confirmarEliminarGrupo(nuevoNombre); };
+
+      // Actualizar tipo en cada tarea del DOM
+      grupo.querySelectorAll("li").forEach(li => {
+          li.dataset.tipo = nuevoNombre;
+      });
+
+      guardarTareas();
+      guardarOrden();
+      finalizarEdicion();
   };
 
   input.addEventListener("keydown", (e) => {
@@ -373,7 +474,7 @@ function editarGrupo(nombreActual) {
           nuevoH2.className = "text-xl font-semibold tracking-wide";
           nuevoH2.textContent = textoOriginal;
           input.replaceWith(nuevoH2);
-          finalizarEdicion(); // Llama a finalizar
+          finalizarEdicion();
       }
   });
 
@@ -387,9 +488,11 @@ function editarGrupo(nombreActual) {
  */
 
 /**
- * Adjunta todos los listeners necesarios (clic, doble clic, teclado) al span de una tarea.
+ * Adjunta todos los listeners necesarios al span de texto de una tarea.
+ * Incluye: clic para mostrar/ocultar descripción, doble clic para editar, y atajos de teclado.
  * @param {HTMLElement} spanTarea - El elemento span que contiene el texto de la tarea.
- * @param {HTMLLIElement} item - El elemento <li> padre de la tarea.
+ * @param {HTMLLIElement} item - El elemento <li> padre que contiene la tarea.
+ * @returns {void}
  */
 function adjuntarListenersAlSpan(spanTarea, item) {
   // Clic para mostrar/ocultar descripción
@@ -456,7 +559,26 @@ function editarTarea(item, spanTarea) {
   const guardarCambios = () => {
       const nuevaTareaTexto = input.value.trim();
 
-      if (nuevaTareaTexto && nuevaTareaTexto !== tareaOriginal) {
+      // Validar que no esté vacío y que sea diferente del original
+      if (!nuevaTareaTexto) {
+          restaurarSpan(tareaOriginal);
+          return;
+      }
+
+      // Validar longitud
+      if (nuevaTareaTexto.length < VALIDACION_CONFIG.minLengthTarea) {
+          aplicarEstiloError(input, true);
+          limpiarEstilosError([input], 1500);
+          return;
+      }
+
+      if (nuevaTareaTexto.length > VALIDACION_CONFIG.maxLengthTarea) {
+          aplicarEstiloError(input, true);
+          limpiarEstilosError([input], 1500);
+          return;
+      }
+
+      if (nuevaTareaTexto !== tareaOriginal) {
           const tareaObj = tareas.find(t => t.id == id);
           if (tareaObj) {
               tareaObj.tarea = nuevaTareaTexto;
@@ -481,136 +603,168 @@ function editarTarea(item, spanTarea) {
   input.addEventListener("blur", guardarCambios);
 }
 
+/**
+ * Muestra u oculta el mensaje "No hay tareas" según si el contenedor está vacío.
+ * El mensaje solo se muestra cuando no existen tareas en todo el tablero.
+ * @returns {void}
+ */
 function mostrarMensajeVacio(){
-  const mensaje = document.getElementById("mensajeVacio")
-  if(taskContainer.children.length === 0){
-    mensaje.classList.remove("hidden")
-  }else{
-    mensaje.classList.add("hidden")
+  const mensaje = document.getElementById("mensajeVacio");
+  if (taskContainer.children.length === 0) {
+    mensaje.classList.remove("hidden");
+  } else {
+    mensaje.classList.add("hidden");
   }
 }
 
 /**
- * Elimina una tarea concreta tanto del DOM como del array en memoria.
- * @param {string} tipo - Tipo/grupo de la tarea.
- * @param {string} tarea - Texto de la tarea.
- * @param {HTMLLIElement} item - Elemento de lista asociado.
+ * Elimina una tarea del array, DOM, y localStorage.
+ * Actualiza el progreso y muestra el mensaje de contenedor vacío si es necesario.
+ * @param {string} tipo - Categoría/grupo de la tarea a eliminar.
+ * @param {string} tarea - Texto descriptivo de la tarea.
+ * @param {HTMLLIElement} item - Elemento de lista del DOM a remover.
+ * @returns {void}
  */
 function eliminarTarea(tipo, tarea, item){
-  tareas = tareas.filter(t => !(t.tipo === tipo && t.tarea === tarea))
-  guardarTareas()
-  guardarOrden()
+  tareas = tareas.filter(t => !(t.tipo === tipo && t.tarea === tarea));
+  guardarTareas();
+  guardarOrden();
 
-  item.remove()
-  actualizarProgreso()
-  cerrarModal()
-  mostrarMensajeVacio()
+  item.remove();
+  actualizarProgreso();
+  cerrarModal();
+  mostrarMensajeVacio();
 }
 
 /**
  * Elimina un grupo completo y todas sus tareas asociadas.
+ * Limpia el array, DOM, localStorage, y actualiza la interfaz.
  * @param {string} tipo - Nombre del grupo a eliminar.
+ * @returns {void}
  */
 function eliminarGrupo(tipo){
-  tareas = tareas.filter(t => t.tipo !== tipo)
-  guardarTareas()
-  guardarOrden()
+  tareas = tareas.filter(t => t.tipo !== tipo);
+  guardarTareas();
+  guardarOrden();
 
-  document.getElementById("grupo-"+tipo).remove()
-  actualizarProgreso()
-  cerrarModal()
-  mostrarMensajeVacio()
+  document.getElementById("grupo-" + tipo).remove();
+  actualizarProgreso();
+  cerrarModal();
+  mostrarMensajeVacio();
 }
 
 /**
- * Abre un modal de confirmación para eliminar una única tarea.
- * @param {HTMLButtonElement} boton - Botón que dispara la acción.
+ * Crea y muestra un modal de confirmación genérico para acciones destructivas.
+ * Aplica efecto de escala y opacidad para la animación de entrada.
+ * @param {string} titulo - Título del modal de confirmación.
+ * @param {string} descripcion - Mensaje descriptivo del modal.
+ * @param {Function} onConfirm - Callback ejecutado al confirmar la acción.
+ * @param {string} [btnConfirmText="Eliminar"] - Texto del botón de confirmación.
+ * @returns {void}
+ */
+/**
+ * Muestra un modal de confirmación con opciones personalizables.
+ * Incluye animación de entrada (scale y fade in) y cierre animado.
+ * @param {string} titulo - Título del modal.
+ * @param {string} descripcion - Descripción o mensaje del modal.
+ * @param {Function} onConfirm - Función a ejecutar si confirma.
+ * @param {string} btnConfirmText - Texto del botón de confirmación (default: "Eliminar").
+ * @returns {void}
+ */
+function mostrarModalConfirmacion(titulo, descripcion, onConfirm, btnConfirmText = "Eliminar") {
+  const modal = document.createElement("div");
+  modal.className = "fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50";
+  modal.innerHTML = `
+<div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-2xl max-w-sm mx-4 transform scale-95 opacity-0 transition-all duration-200" role="dialog" aria-modal="true" aria-labelledby="modalTitulo">
+  <h3 id="modalTitulo" class="text-lg font-semibold mb-3 text-gray-900 dark:text-white">${titulo}</h3>
+  <p class="text-sm text-gray-600 dark:text-gray-300 mb-5">${descripcion}</p>
+  <div class="flex gap-3">
+    <button id="btnConfirmar" class="flex-1 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition">
+      ${btnConfirmText}
+    </button>
+    <button id="btnCancelar" class="flex-1 bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500 text-gray-800 dark:text-white px-4 py-2 rounded-lg transition">
+      Cancelar
+    </button>
+  </div>
+</div>
+`;
+
+  document.body.appendChild(modal);
+
+  // Event listeners para botones
+  document.getElementById("btnConfirmar").onclick = () => {
+    onConfirm();
+    cerrarModal();
+  };
+  
+  document.getElementById("btnCancelar").onclick = cerrarModal;
+
+  // Animación de entrada (escala y opacidad)
+  setTimeout(() => {
+    modal.firstElementChild.classList.remove("scale-95", "opacity-0");
+    modal.firstElementChild.classList.add("scale-100", "opacity-100");
+  }, 10);
+}
+
+/**
+ * Abre un modal de confirmación antes de eliminar una única tarea.
+ * @param {HTMLButtonElement} boton - Botón que dispara la acción de eliminación.
+ * @returns {void}
  */
 function confirmarEliminarTarea(boton){
-  const modal = document.createElement("div")
-  modal.className = "fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
-  modal.innerHTML = `
-<div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-2xl max-w-sm mx-4 transform scale-95 opacity-0 transition-all duration-200" role="dialog" aria-modal="true" aria-labelledby="tituloEliminarTarea">
-  <h3 id="tituloEliminarTarea" class="text-lg font-semibold mb-3 text-gray-900 dark:text-white">¿Está seguro de eliminar esta tarea?</h3>
-  <p class="text-sm text-gray-600 dark:text-gray-300 mb-5">Esta acción no se puede deshacer.</p>
-  <div class="flex gap-3">
-    <button id="btnEliminarTarea" class="flex-1 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition">
-      Eliminar
-    </button>
-    <button onclick="cerrarModal()" class="flex-1 bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500 text-gray-800 dark:text-white px-4 py-2 rounded-lg transición">
-      Cancelar
-    </button>
-  </div>
-</div>
-`
-  document.body.appendChild(modal)
+  const item = boton.closest("li");
+  const tipo = item.dataset.tipo;
+  const tarea = item.dataset.tarea;
 
-  const item = boton.closest("li")
-  const tipo = item.dataset.tipo
-  const tarea = item.dataset.tarea
+  const titulo = "¿Está seguro de eliminar esta tarea?";
+  const descripcion = "Esta acción no se puede deshacer.";
+  const onConfirm = () => eliminarTarea(tipo, tarea, item);
 
-  document.getElementById("btnEliminarTarea").onclick = function(){
-    eliminarTarea(tipo, tarea, item)
-  }
-
-  setTimeout(()=>{
-    modal.firstElementChild.classList.remove("scale-95", "opacity-0")
-    modal.firstElementChild.classList.add("scale-100", "opacity-100")
-  },10)
+  mostrarModalConfirmacion(titulo, descripcion, onConfirm);
 }
 
 /**
- * Abre un modal de confirmación para eliminar todas las tareas de un grupo.
+ * Abre un modal de confirmación antes de eliminar un grupo completo.
  * @param {string} tipo - Nombre del grupo a eliminar.
+ * @returns {void}
  */
 function confirmarEliminarGrupo(tipo){
-  const modal = document.createElement("div")
-  modal.className = "fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
-  modal.innerHTML = `
-<div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-2xl max-w-sm mx-4 transform scale-95 opacity-0 transición-all duration-200" role="dialog" aria-modal="true" aria-labelledby="tituloEliminarGrupo">
-  <h3 id="tituloEliminarGrupo" class="text-lg font-semibold mb-3 text-gray-900 dark:text-white">¿Está seguro de eliminar este grupo?</h3>
-  <p class="text-sm text-gray-600 dark:text-gray-300 mb-5">Se eliminarán todas las tareas del grupo "${tipo}".</p>
-  <div class="flex gap-3">
-    <button onclick="eliminarGrupo('${tipo}')" class="flex-1 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition">
-      Eliminar
-    </button>
-    <button onclick="cerrarModal()" class="flex-1 bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500 text-gray-800 dark:text-white px-4 py-2 rounded-lg transition">
-      Cancelar
-    </button>
-  </div>
-</div>
-`
-  document.body.appendChild(modal)
-  modal.dataset.tipo = tipo
+  const titulo = "¿Está seguro de eliminar este grupo?";
+  const descripcion = `Se eliminarán todas las tareas del grupo "${tipo}".`;
+  const onConfirm = () => eliminarGrupo(tipo);
 
-  setTimeout(()=>{
-    modal.firstElementChild.classList.remove("scale-95", "opacity-0")
-    modal.firstElementChild.classList.add("scale-100", "opacity-100")
-  },10)
+  mostrarModalConfirmacion(titulo, descripcion, onConfirm);
 }
 
 /**
- * Cierra (si existe) el modal de confirmación actual.
+ * Cierra el modal de confirmación actual (si existe).
+ * Aplica animación de cierre antes de remover el elemento del DOM.
+ * @returns {void}
  */
 function cerrarModal(){
-  const modal = document.querySelector(".fixed.inset-0")
-  if(modal){
-    modal.firstElementChild.classList.add("scale-95", "opacity-0")
-    setTimeout(()=>{
-      modal.remove()
-    },200)
+  const modal = document.querySelector(".fixed.inset-0");
+  if (modal) {
+    modal.firstElementChild.classList.add("scale-95", "opacity-0");
+    setTimeout(() => {
+      modal.remove();
+    }, 200);
   }
 }
 
 /**
- * Guarda el array de tareas en localStorage.
+ * Guarda la lista completa de tareas en localStorage en formato JSON.
+ * Se invoca tras cualquier cambio: crear, editar, eliminar o completar tareas.
+ * @returns {void}
  */
 function guardarTareas(){
-  localStorage.setItem("tareas", JSON.stringify(tareas))
+  localStorage.setItem("tareas", JSON.stringify(tareas));
 }
 
 /**
- * Guarda el orden actual de grupos y tareas dentro de cada grupo en localStorage.
+ * Guarda el orden actual de grupos y tareas en localStorage.
+ * Utiliza el orden visual del DOM como fuente de verdad para drag-and-drop.
+ * Se invoca al finalizar operaciones de arrastre y al cambiar el orden de tareas.
+ * @returns {void}
  */
 function guardarOrden(){
   const grupos = Array.from(document.querySelectorAll("[id^='grupo-']"))
@@ -628,7 +782,9 @@ function guardarOrden(){
 }
 
 /**
- * Reconstruye el orden de grupos y tareas a partir de los datos almacenados.
+ * Reconstruye el orden de grupos y tareas a partir de los datos almacenados en localStorage.
+ * Limpia el contenedor para evitar duplicados y regenera tareas desde los objetos guardados.
+ * @returns {void}
  */
 function cargarOrden(){
   const datos = localStorage.getItem("ordenGrupos");
@@ -650,17 +806,22 @@ function cargarOrden(){
 }
 
 /**
- * Carga el listado de tareas almacenadas en localStorage en memoria.
+ * Carga el listado de tareas almacenadas en localStorage hacia la memoria (array global).
+ * Si no hay datos almacenados, el array permanece vacío.
+ * @returns {void}
  */
 function cargarTareas(){
-  const datos = localStorage.getItem("tareas")
-  if(datos){
-    tareas = JSON.parse(datos)
+  const datos = localStorage.getItem("tareas");
+  if (datos) {
+    tareas = JSON.parse(datos);
   }
 }
 
 /**
- * Crea un juego inicial de tareas de ejemplo cuando no existe información previa.
+ * Crea un conjunto de 8 tareas de ejemplo para demostración en primera carga.
+ * Solo se ejecuta si no existe información previa en localStorage.
+ * Incluye tareas de categorías: Compra, Ejercicio, Trabajo.
+ * @returns {void}
  */
 function cargarTareasIniciales(){
   const tareasIniciales = [
@@ -676,7 +837,6 @@ function cargarTareasIniciales(){
 
   tareas.push(...tareasIniciales);
 
-  // Iteramos y pasamos cada objeto a la función del DOM
   tareasIniciales.forEach(tarea => {
     crearTareaEnDOM(tarea, false);
   });
@@ -685,123 +845,164 @@ function cargarTareasIniciales(){
   guardarOrden();
 }
 
+/**
+ * Normaliza un texto eliminando acentos y espacios en blanco, convirtiéndolo a minúsculas.
+ * Utilizado para búsquedas insensibles a mayúsculas, minúsculas y acentos.
+ * @param {string} texto - Texto a normalizar.
+ * @returns {string} Texto normalizado sin acentos y en minúsculas.
+ */
 function normalizarTexto(texto) {
     if (!texto) return "";
     return texto
         .toLowerCase()
-        .normalize('NFD') // Separa las letras de los acentos (ej: "á" -> "a" + "´")
-        .replace(/[\u0300-\u036f]/g, ''); // Elimina los acentos (diacríticos)
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
 }
 
 /**
- * Filtra visualmente las tareas del tablero a partir de un texto de búsqueda.
- * La búsqueda ignora mayúsculas/minúsculas y acentos.
+ * Filtra visualmente las tareas del tablero según un texto de búsqueda ingresado.
+ * La búsqueda ignora mayúsculas, minúsculas y acentos para mayor flexibilidad.
+ * Solo oculta tareas que NO coinciden; no elimina elementos del DOM.
  * @param {string} texto - Texto a buscar dentro del contenido de cada tarea.
+ * @returns {void}
+ */
+/**
+ * Filtra las tareas mostradas según un término de búsqueda.
+ * Normaliza tanto el término como el texto de las tareas (sin acentos) para una búsqueda flexible.
+ * Las tareas que coincidan se muestran, las demás se ocultan.
+ * @param {string} texto - Término de búsqueda a filtrar.
+ * @returns {void}
  */
 function buscar(texto) {
-    const tareas = document.querySelectorAll("li");
-    // Normalizamos el término de búsqueda una sola vez fuera del bucle
+    const todasLasTareas = document.querySelectorAll("li");
+    // Normalizamos el término de búsqueda una sola vez fuera del bucle para mejor performance
     const textoNormalizado = normalizarTexto(texto);
 
-    tareas.forEach(t => {
-        // Normalizamos el contenido de la tarea en cada iteración
-        const contenidoNormalizado = normalizarTexto(t.innerText);
+    todasLasTareas.forEach(tareaElement => {
+        // Normalizamos el contenido visible de la tarea
+        const contenidoNormalizado = normalizarTexto(tareaElement.innerText);
         
-        // Comparamos los textos ya normalizados
-        t.style.display = contenidoNormalizado.includes(textoNormalizado) ? "flex" : "none";
+        // Mostramos u ocultamos según coincidencia
+        tareaElement.style.display = contenidoNormalizado.includes(textoNormalizado) ? "flex" : "none";
     });
 }
 
+/**
+ * Alterna el estado de completado de todas las tareas simultáneamente.
+ * Si todas están completadas, las marca como pendientes. Si alguna está pendiente, completa todas.
+ * Útil para operaciones rápidas de marcado en lote.
+ * @returns {void}
+ */
 function completarTodas(){
-  const checks = document.querySelectorAll("input[type='checkbox']")
-  const total = checks.length
-  const completadas = document.querySelectorAll("input:checked").length
+  const checks = document.querySelectorAll("input[type='checkbox']");
+  const total = checks.length;
+  const completadas = document.querySelectorAll("input:checked").length;
 
-  checks.forEach(c=>{
-    if(completadas === total){
-      if(c.checked) c.click()
-    }else{
-      if(!c.checked) c.click()
+  checks.forEach(checkbox => {
+    if (completadas === total) {
+      // Si todas están completadas, desmarcar todas
+      if (checkbox.checked) {
+        checkbox.click();
+      }
+    } else {
+      // Si alguna está pendiente, marcar todas
+      if (!checkbox.checked) {
+        checkbox.click();
+      }
     }
-  })
+  });
 }
 
 /**
- * Marca una tarea como completada o pendiente y actualiza la barra de progreso.
- * @param {HTMLInputElement} checkbox - Checkbox asociado a la tarea.
+ * Marca una tarea como completada o pendiente tras interacción del usuario.
+ * Actualiza visualmente el DOM, el array de tareas, y la barra de progreso.
+ * Incluye animación de escala para retroalimentación visual.
+ * @param {HTMLInputElement} checkbox - Input checkbox asociado a la tarea.
+ * @returns {void}
  */
 function completarTarea(checkbox){
-  const tarea = checkbox.closest("li")
-  const texto = checkbox.nextElementSibling
+  const tarea = checkbox.closest("li");
+  const texto = checkbox.nextElementSibling;
 
-  texto.classList.toggle("line-through")
-  texto.classList.toggle("opacity-50")
-  tarea.classList.toggle("opacity-60")
-  tarea.classList.add("scale-95")
+  // Actualizar estilos visuales
+  texto.classList.toggle("line-through");
+  texto.classList.toggle("opacity-50");
+  tarea.classList.toggle("opacity-60");
+  tarea.classList.add("scale-95");
 
-  setTimeout(()=>{
-    tarea.classList.remove("scale-95")
-  },150)
+  // Animación de escala
+  setTimeout(() => {
+    tarea.classList.remove("scale-95");
+  }, 150);
 
-  const tipo = tarea.dataset.tipo
-  const tareaTexto = tarea.dataset.tarea
-  const tareaObj = tareas.find(t => t.tipo === tipo && t.tarea === tareaTexto)
-  if(tareaObj){
-    tareaObj.completed = checkbox.checked
-    guardarTareas()
+  // Actualizar en el array de datos
+  const tipo = tarea.dataset.tipo;
+  const tareaTexto = tarea.dataset.tarea;
+  const tareaObj = tareas.find(t => t.tipo === tipo && t.tarea === tareaTexto);
+  
+  if (tareaObj) {
+    tareaObj.completed = checkbox.checked;
+    guardarTareas();
   }
 
-  actualizarProgreso()
+  actualizarProgreso();
 }
 
 /**
- * Actualiza la barra y el texto de progreso general de tareas completadas.
+ * Actualiza la barra de progreso y el porcentaje visible en la interfaz.
+ * Calcula el porcentaje de tareas completadas y aplica gradientes de color dinámicos.
+ * Gradientes: rojo (0-33%), amarillo (33-66%), verde (66-99%), verde oscuro (100%).
+ * Actualiza también los atributos ARIA para accesibilidad.
+ * @returns {void}
  */
 function actualizarProgreso(){
-  const total = document.querySelectorAll("li").length
-  const completadas = document.querySelectorAll("input:checked").length
+  const total = document.querySelectorAll("li").length;
+  const completadas = document.querySelectorAll("input:checked").length;
 
-  if(total === 0){
-    const barra = document.getElementById("barraProgreso")
-    barra.style.width = "0%"
-    barra.style.background = "linear-gradient(90deg, #a855f7, #ec4899)"
-    const texto = document.getElementById("progresoTexto")
-    texto.textContent = "0%"
-    const progressContainer = document.querySelector('[role="progressbar"]')
-    if(progressContainer){
-      progressContainer.setAttribute("aria-valuenow", "0")
-      progressContainer.setAttribute("aria-valuetext", "0% completado")
+  const barra = document.getElementById("barraProgreso");
+  const texto = document.getElementById("progresoTexto");
+  const progressContainer = document.querySelector('[role="progressbar"]');
+
+  // Manejo del caso vacío
+  if (total === 0) {
+    barra.style.width = "0%";
+    barra.style.background = "linear-gradient(90deg, #a855f7, #ec4899)";
+    texto.textContent = "0%";
+    if (progressContainer) {
+      progressContainer.setAttribute("aria-valuenow", "0");
+      progressContainer.setAttribute("aria-valuetext", "0% completado");
     }
-    return
+    return;
   }
 
-  const porcentaje = Math.round((completadas / total) * 100)
-  const barra = document.getElementById("barraProgreso")
+  // Calcular porcentaje
+  const porcentaje = Math.round((completadas / total) * 100);
+  barra.style.width = porcentaje + "%";
 
-  barra.style.width = porcentaje + "%"
-
-  if(porcentaje < 33){
-    barra.style.background = "linear-gradient(90deg, #ef4444, #f97316)"
-  }else if(porcentaje < 66){
-    barra.style.background = "linear-gradient(90deg, #f59e0b, #eab308)"
-  }else if(porcentaje < 100){
-    barra.style.background = "linear-gradient(90deg, #84cc16, #22c55e)"
-  }else{
-    barra.style.background = "linear-gradient(90deg, #10b981, #059669)"
+  // Aplicar gradiente según progreso
+  if (porcentaje < 33) {
+    barra.style.background = "linear-gradient(90deg, #ef4444, #f97316)";
+  } else if (porcentaje < 66) {
+    barra.style.background = "linear-gradient(90deg, #f59e0b, #eab308)";
+  } else if (porcentaje < 100) {
+    barra.style.background = "linear-gradient(90deg, #84cc16, #22c55e)";
+  } else {
+    barra.style.background = "linear-gradient(90deg, #10b981, #059669)";
   }
 
-  const texto = document.getElementById("progresoTexto")
-  texto.textContent = porcentaje + "%"
-  const progressContainer = document.querySelector('[role="progressbar"]')
-  if(progressContainer){
-    progressContainer.setAttribute("aria-valuenow", String(porcentaje))
-    progressContainer.setAttribute("aria-valuetext", porcentaje + "% completado")
+  // Actualizar texto y atributos ARIA
+  texto.textContent = porcentaje + "%";
+  if (progressContainer) {
+    progressContainer.setAttribute("aria-valuenow", String(porcentaje));
+    progressContainer.setAttribute("aria-valuetext", porcentaje + "% completado");
   }
 }
 
 /**
- * Activa la funcionalidad de arrastrar y soltar sobre una lista dada.
- * @param {HTMLElement} lista - Lista UL que contendrá tareas arrastrables.
+ * Activa la funcionalidad de arrastrar y soltar (drag-and-drop) sobre una lista de tareas.
+ * Configura la animación, clases CSS para retroalimentación visual, y guardado automático al finalizar el drag.
+ * @param {HTMLElement} lista - Elemento UL que contendrá las tareas arrastrables.
+ * @returns {void}
  */
 function activarSortableLista(lista) {
     const grupo = lista.closest('[id^="grupo-"]');
@@ -813,7 +1014,7 @@ function activarSortableLista(lista) {
         ghostClass: "opacity-50",
         chosenClass: "bg-indigo-200",
         dragClass: "rotate-1",
-        onEnd: guardarOrden // Volvemos a la versión simple
+        onEnd: guardarOrden
     });
     
     sortableInstances[groupId] = sortable;
@@ -825,7 +1026,6 @@ function agregarSubtarea(tipo) {
 
   const inputContainer = document.createElement("div");
   inputContainer.className = "mt-2 flex gap-2";
-  // Corregimos el placeholder y las clases de los botones para que sean consistentes
   inputContainer.innerHTML = `
 <input type="text" placeholder="Nueva tarea..." class="flex-1 px-3 py-2 rounded-lg bg-white/10 border border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
 <button class="btn-guardar-subtarea bg-indigo-500 hover:bg-indigo-600 px-3 rounded-lg transition">✓</button>
@@ -838,27 +1038,53 @@ function agregarSubtarea(tipo) {
 
   const guardarSubtarea = () => {
       const textoSubtarea = input.value.trim();
-      if (textoSubtarea) {
-          const existeDuplicada = tareas.some(t =>
-              t.tipo.toLowerCase() === tipo.toLowerCase() &&
-              t.tarea.toLowerCase() === textoSubtarea.toLowerCase()
-          );
-          if (existeDuplicada) {
-              input.classList.add("ring-2", "ring-red-500", "animate-heartbeat");
-              setTimeout(() => {
-                  input.classList.remove("ring-2", "ring-red-500", "animate-heartbeat");
-              }, 2000);
-              return;
-          }
-          
-          // --- ¡ARREGLO CLAVE! ---
-          // Creamos el objeto primero y luego lo pasamos a la función del DOM
-          const nuevaTarea = crearTareaObjeto(tipo, textoSubtarea, "baja");
-          tareas.push(nuevaTarea);
-          crearTareaEnDOM(nuevaTarea); // Llamada corregida
-          guardarTareas();
-          guardarOrden();
+      const elementosConError = [];
+      let hayError = false;
+
+      // Validar campo vacío
+      if (!textoSubtarea) {
+          aplicarEstiloError(input, true);
+          hayError = true;
+          elementosConError.push(input);
       }
+
+      // Validar longitud mínima
+      if (textoSubtarea.length > 0 && textoSubtarea.length < VALIDACION_CONFIG.minLengthTarea) {
+          aplicarEstiloError(input, true);
+          hayError = true;
+          if (!elementosConError.includes(input)) elementosConError.push(input);
+      }
+
+      // Validar longitud máxima
+      if (textoSubtarea.length > VALIDACION_CONFIG.maxLengthTarea) {
+          aplicarEstiloError(input, true);
+          hayError = true;
+          if (!elementosConError.includes(input)) elementosConError.push(input);
+      }
+
+      // Validar duplicados
+      const existeDuplicada = tareas.some(t =>
+          t.tipo.toLowerCase() === tipo.toLowerCase() &&
+          t.tarea.toLowerCase() === textoSubtarea.toLowerCase()
+      );
+      if (existeDuplicada) {
+          aplicarEstiloError(input, true);
+          hayError = true;
+          if (!elementosConError.includes(input)) elementosConError.push(input);
+      }
+
+      if (hayError) {
+          limpiarEstilosError(elementosConError, 1500);
+          return;
+      }
+
+      // Crear y guardar tarea
+      const nuevaTarea = crearTareaObjeto(tipo, textoSubtarea, "baja");
+      tareas.push(nuevaTarea);
+      crearTareaEnDOM(nuevaTarea);
+      guardarTareas();
+      guardarOrden();
+      
       const nuevoBoton = crearBotonAgregarSubtarea(tipo);
       inputContainer.replaceWith(nuevoBoton);
   };
@@ -868,7 +1094,6 @@ function agregarSubtarea(tipo) {
       inputContainer.replaceWith(nuevoBoton);
   };
 
-  // Usamos las clases corregidas y consistentes
   inputContainer.querySelector(".btn-guardar-subtarea").onclick = guardarSubtarea;
   inputContainer.querySelector(".btn-cancelar-subtarea").onclick = cancelar;
 
@@ -880,9 +1105,7 @@ function agregarSubtarea(tipo) {
       }
   });
   
-  // El blur debe cancelar, no guardar. Un timeout previene que se cierre al hacer clic en los botones.
   input.addEventListener("blur", (e) => {
-      // Solo cancela si el foco no se fue a uno de los botones de acción
       if (!e.relatedTarget || (!e.relatedTarget.matches('.btn-guardar-subtarea') && !e.relatedTarget.matches('.btn-cancelar-subtarea'))) {
           setTimeout(cancelar, 100);
       }
@@ -891,25 +1114,26 @@ function agregarSubtarea(tipo) {
 
 function crearBotonAgregarSubtarea(tipo) {
   const boton = document.createElement("button");
-  boton.className = "btn-agregar-subtarea mt-3 w-full bg-white/5 hover:bg-white/10 dark:bg-black/5 dark:hover:bg-black/10 border border-white/20 hover:border-indigo-400 rounded-lg py-2 text-sm transición-all flex items-center justify-center gap-1 group";
-  boton.setAttribute("aria-label", "Añadir tarea a " + tipo);
-  // Cambiamos el texto del botón
+  boton.className = "btn-agregar-subtarea mt-3 w-full bg-white/5 hover:bg-white/10 dark:bg-black/5 dark:hover:bg-black/10 border border-white/20 hover:border-indigo-400 rounded-lg py-2 text-sm transition-all flex items-center justify-center gap-1 group";
+  boton.setAttribute("aria-label", `Añadir tarea a ${tipo}`);
   boton.innerHTML = `
 <span class="text-lg leading-none group-hover:scale-110 transition-transform">+</span>
 <span class="leading-none">Nueva tarea</span>
 `;
-  boton.onclick = function () { agregarSubtarea(tipo); };
+  boton.onclick = () => agregarSubtarea(tipo);
   return boton;
 }
 
 /**
- * Cambia cíclicamente el nivel de prioridad de una tarea (baja → media → alta → baja).
- * @param {HTMLLIElement} item - Elemento de lista de la tarea.
- * @param {HTMLElement} badge - Elemento visual que muestra la prioridad.
+ * Cambia cíclicamente el nivel de prioridad de una tarea: baja → media → alta → baja.
+ * Actualiza el DOM, el array de tareas, y persiste los cambios en localStorage.
+ * @param {HTMLLIElement} item - Elemento de lista que representa la tarea.
+ * @param {HTMLElement} badge - Elemento visual (badge) que muestra la prioridad.
+ * @returns {void}
  */
 function cambiarPrioridad(item, badge) {
   const prioridadActual = item.dataset.prioridad;
-  const id = item.dataset.id; // Usamos el ID para una búsqueda más fiable
+  const id = item.dataset.id;
 
   const rotacion = {
       "baja": "media",
@@ -921,21 +1145,21 @@ function cambiarPrioridad(item, badge) {
   const { color: nuevoColor, borde: nuevoBorde } = PRIORIDAD_COLORES[nuevaPrioridad];
   const { borde: bordeActual } = PRIORIDAD_COLORES[prioridadActual];
 
-  // 1. Actualizamos el dataset del item
+  // Actualizar dataset del item
   item.dataset.prioridad = nuevaPrioridad;
 
-  // 2. Actualizamos la apariencia del badge de prioridad
+  // Actualizar apariencia del badge
   badge.className = `prioridad-badge ${nuevoColor} text-white px-2 py-0.5 rounded text-xs whitespace-nowrap cursor-pointer hover:scale-110 transition-transform`;
   badge.textContent = nuevaPrioridad;
 
-  // 3. Buscamos el contenedor principal de la tarea y cambiamos SOLO la clase del borde
+  // Actualizar borde del contenedor principal
   const contenidoPrincipal = item.querySelector('.flex.justify-between.items-center');
   if (contenidoPrincipal) {
       contenidoPrincipal.classList.remove(bordeActual);
       contenidoPrincipal.classList.add(nuevoBorde);
   }
 
-  // 4. Buscamos la tarea en el array por su ID y actualizamos sus datos
+  // Actualizar en el array y persistir
   const tareaObj = tareas.find(t => t.id == id);
   if (tareaObj) {
       tareaObj.prioridad = nuevaPrioridad;
@@ -945,55 +1169,90 @@ function cambiarPrioridad(item, badge) {
 }
 
 /**
- * Punto de entrada de la aplicación. Restaura modo, tareas, orden y listeners de interfaz.
+ * Inicializa el modo oscuro/claro desde localStorage.
+ * @returns {void}
  */
-window.onload = function(){
-  if(localStorage.getItem("modo") === "dark"){
-    document.documentElement.classList.add("dark")
-    modoBtn.textContent = "☀️"
+function inicializarModo() {
+  if (localStorage.getItem("modo") === "dark") {
+    document.documentElement.classList.add("dark");
+    document.getElementById("modoBtn").textContent = "☀️";
   }
+}
 
+/**
+ * Carga las tareas desde localStorage o inicializa con tareas de demo.
+ * @returns {void}
+ */
+function inicializarTareas() {
   const tareasGuardadas = localStorage.getItem("tareas");
-
+  
   if (tareasGuardadas === null) {
     cargarTareasIniciales();
-  } 
-  else {
+  } else {
     cargarTareas();
     cargarOrden();
   }
-
+  
   mostrarMensajeVacio();
+}
 
+/**
+ * Inicializa la funcionalidad drag-and-drop del contenedor principal de tareas.
+ * @returns {void}
+ */
+function inicializarDragAndDrop() {
   const mainSortable = new Sortable(taskContainer, {
     animation: 200,
     ghostClass: "opacity-50",
     handle: ".handle",
     swapThreshold: 0.65,
-    onEnd: guardarOrden // Volvemos a la versión simple
+    onEnd: guardarOrden
   });
+  
   sortableInstances['taskContainer'] = mainSortable;
-
-  // ... (el resto de la función del sidebar sigue igual) ...
-  const toggleBtn = document.getElementById("toggleSidebar")
-  const sidebarContent = document.getElementById("sidebarContent")
-  const iconoToggle = document.getElementById("iconoToggle")
-
-  if(toggleBtn){
-    toggleBtn.addEventListener("click", function(){
-      if(sidebarContent.style.maxHeight && sidebarContent.style.maxHeight !== "0px"){
-        sidebarContent.style.maxHeight = "0px"
-        sidebarContent.style.opacity = "0"
-        sidebarContent.style.paddingTop = "0"
-        sidebarContent.style.paddingBottom = "0"
-        iconoToggle.style.transform = "rotate(0deg)"
-      } else {
-        sidebarContent.style.maxHeight = sidebarContent.scrollHeight + "px"
-        sidebarContent.style.opacity = "1"
-        sidebarContent.style.paddingTop = "1.25rem"
-        sidebarContent.style.paddingBottom = "1.25rem"
-        iconoToggle.style.transform = "rotate(180deg)"
-      }
-    })
-  }
 }
+
+/**
+ * Inicializa el toggle colapsable del sidebar en dispositivos móviles.
+ * Gestiona la animación de apertura y cierre con transiciones suaves.
+ * @returns {void}
+ */
+function inicializarToggleSidebar() {
+  const toggleBtn = document.getElementById("toggleSidebar");
+  if (!toggleBtn) return;
+  
+  const sidebarContent = document.getElementById("sidebarContent");
+  const iconoToggle = document.getElementById("iconoToggle");
+  
+  toggleBtn.addEventListener("click", () => {
+    const isOpen = sidebarContent.style.maxHeight && sidebarContent.style.maxHeight !== "0px";
+    
+    if (isOpen) {
+      // Cerrar sidebar
+      sidebarContent.style.maxHeight = "0px";
+      sidebarContent.style.opacity = "0";
+      sidebarContent.style.paddingTop = "0";
+      sidebarContent.style.paddingBottom = "0";
+      iconoToggle.style.transform = "rotate(0deg)";
+    } else {
+      // Abrir sidebar
+      sidebarContent.style.maxHeight = sidebarContent.scrollHeight + "px";
+      sidebarContent.style.opacity = "1";
+      sidebarContent.style.paddingTop = "1.25rem";
+      sidebarContent.style.paddingBottom = "1.25rem";
+      iconoToggle.style.transform = "rotate(180deg)";
+    }
+  });
+}
+
+/**
+ * Punto de entrada principal de la aplicación.
+ * Inicializa todos los componentes: modo oscuro, tareas, drag-and-drop, y UI interactiva.
+ * @returns {void}
+ */
+window.onload = function() {
+  inicializarModo();
+  inicializarTareas();
+  inicializarDragAndDrop();
+  inicializarToggleSidebar();
+};

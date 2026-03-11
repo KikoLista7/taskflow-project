@@ -10,23 +10,150 @@
 tailwind.config = { darkMode: 'class' }
 </script>
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-  const modo = localStorage.getItem("modo");
-  if (modo === "dark") document.documentElement.classList.add("dark");
-  const toggle = document.getElementById("modoRegisterBtn");
-  if (toggle) toggle.textContent = document.documentElement.classList.contains("dark") ? "☀️" : "🌙";
-});
+// ==================== CONSTANTES DE CONFIGURACIÓN ====================
 
-function toggleDarkRegister() {
-  document.documentElement.classList.toggle("dark");
-  const esOscuro = document.documentElement.classList.contains("dark");
-  localStorage.setItem("modo", esOscuro ? "dark" : "light");
-  const boton = document.getElementById("modoRegisterBtn");
-  if (boton) boton.textContent = esOscuro ? "☀️" : "🌙";
+const REGISTER_CONFIG = {
+  minNameLength: 2,
+  maxNameLength: 100,
+  minEmailLength: 5,
+  maxEmailLength: 254,
+  minPasswordLength: 6,
+  maxPasswordLength: 128,
+  tiempoAnimacionError: 2000,
+  storageKeys: {
+    email: "taskflow_email",
+    modo: "modo"
+  }
+};
+
+// Expresión regular para validar email en formato RFC5322 simplificado
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// ==================== FUNCIONES AUXILIARES ====================
+
+/**
+ * Aplica estilos visuales de error a un elemento del formulario.
+ * Añade clases de error para proporcionar retroalimentación visual.
+ * @param {HTMLElement} element - Elemento a marcar como error.
+ * @param {boolean} show - Si true muestra el error, si false lo oculta.
+ * @returns {void}
+ */
+function aplicarEstiloErrorRegister(element, show = true) {
+  if (show) {
+    element.classList.add("ring-2", "ring-red-500");
+  } else {
+    element.classList.remove("ring-2", "ring-red-500");
+  }
 }
 
+/**
+ * Limpia los estilos de error de múltiples elementos tras un delay.
+ * @param {HTMLElement[]} elements - Array de elementos a limpiar.
+ * @param {number} [delay] - Retraso en milisegundos antes de limpiar.
+ * @returns {void}
+ */
+function limpiarEstilosErrorRegister(elements, delay = REGISTER_CONFIG.tiempoAnimacionError) {
+  setTimeout(() => {
+    elements.forEach(el => aplicarEstiloErrorRegister(el, false));
+  }, delay);
+}
+
+/**
+ * Valida el formato y longitud de un nombre de usuario.
+ * @param {string} name - Nombre a validar.
+ * @returns {Object} Objeto con propiedades: isValid (boolean) y message (string de error).
+ */
+function validarNombre(name) {
+  if (!name) {
+    return { isValid: false, message: "Por favor introduce tu nombre." };
+  }
+  if (name.length < REGISTER_CONFIG.minNameLength) {
+    return { isValid: false, message: `El nombre debe tener al menos ${REGISTER_CONFIG.minNameLength} caracteres.` };
+  }
+  if (name.length > REGISTER_CONFIG.maxNameLength) {
+    return { isValid: false, message: `El nombre es demasiado largo (máximo ${REGISTER_CONFIG.maxNameLength} caracteres).` };
+  }
+  return { isValid: true, message: "" };
+}
+
+/**
+ * Valida el formato y longitud de un correo electrónico.
+ * @param {string} email - Correo a validar.
+ * @returns {Object} Objeto con propiedades: isValid (boolean) y message (string de error).
+ */
+function validarEmailRegister(email) {
+  if (!email) {
+    return { isValid: false, message: "Por favor introduce tu correo electrónico." };
+  }
+  if (email.length < REGISTER_CONFIG.minEmailLength) {
+    return { isValid: false, message: "El correo debe tener al menos 5 caracteres." };
+  }
+  if (email.length > REGISTER_CONFIG.maxEmailLength) {
+    return { isValid: false, message: "El correo es demasiado largo (máximo 254 caracteres)." };
+  }
+  if (!EMAIL_REGEX.test(email)) {
+    return { isValid: false, message: "El formato del correo no es válido (ej: usuario@ejemplo.com)." };
+  }
+  return { isValid: true, message: "" };
+}
+
+/**
+ * Valida el formato y longitud de una contraseña.
+ * @param {string} password - Contraseña a validar.
+ * @returns {Object} Objeto con propiedades: isValid (boolean) y message (string de error).
+ */
+function validarContraseñaRegister(password) {
+  if (!password) {
+    return { isValid: false, message: "Por favor introduce una contraseña." };
+  }
+  if (password.length < REGISTER_CONFIG.minPasswordLength) {
+    return { isValid: false, message: `La contraseña debe tener al menos ${REGISTER_CONFIG.minPasswordLength} caracteres.` };
+  }
+  if (password.length > REGISTER_CONFIG.maxPasswordLength) {
+    return { isValid: false, message: `La contraseña es demasiado larga (máximo ${REGISTER_CONFIG.maxPasswordLength} caracteres).` };
+  }
+  return { isValid: true, message: "" };
+}
+
+/**
+ * Valida que dos contraseñas coincidan.
+ * @param {string} password1 - Primera contraseña.
+ * @param {string} password2 - Segunda contraseña (confirmación).
+ * @returns {Object} Objeto con propiedades: isValid (boolean) y message (string de error).
+ */
+function validarContraseñasCoinciden(password1, password2) {
+  if (password1 !== password2) {
+    return { isValid: false, message: "Las contraseñas no coinciden." };
+  }
+  return { isValid: true, message: "" };
+}
+
+/**
+ * Alterna el modo oscuro/claro y persiste la preferencia en localStorage.
+ * Actualiza el icono del botón según el modo activo.
+ * @returns {void}
+ */
+function toggleDarkRegister() {
+  document.documentElement.classList.toggle("dark");
+  const isDark = document.documentElement.classList.contains("dark");
+  localStorage.setItem(REGISTER_CONFIG.storageKeys.modo, isDark ? "dark" : "light");
+  
+  const boton = document.getElementById("modoRegisterBtn");
+  if (boton) {
+    boton.textContent = isDark ? "☀️" : "🌙";
+  }
+}
+
+/**
+ * Maneja el envío del formulario de registro.
+ * Valida nombre, email y contraseñas con todas las comprobaciones necesarias.
+ * Si la validación es correcta, guarda datos y redirige al login.
+ * @param {Event} event - Evento de envío del formulario.
+ * @returns {void}
+ */
 function manejarRegistro(event) {
   event.preventDefault();
+  
   const nombreInput = document.getElementById("nombre");
   const emailInput = document.getElementById("email");
   const passwordInput = document.getElementById("password");
@@ -38,36 +165,105 @@ function manejarRegistro(event) {
   const pass1 = passwordInput.value.trim();
   const pass2 = password2Input.value.trim();
 
+  // Limpiar mensaje de error previo
   errorBox.textContent = "";
   errorBox.classList.add("hidden");
 
-  let mensajeError = "";
-  if (!nombre) {
-    mensajeError = "Por favor introduce tu nombre.";
-  } else if (!email) {
-    mensajeError = "Por favor introduce tu correo electrónico.";
-  } else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-    mensajeError = "El formato del correo no es válido.";
-  } else if (!pass1 || pass1.length < 6) {
-    mensajeError = "La contraseña debe tener al menos 6 caracteres.";
-  } else if (pass1 !== pass2) {
-    mensajeError = "Las contraseñas no coinciden.";
+  const elementsWithError = [];
+  let errorMessage = "";
+
+  // Validar nombre
+  const nameValidation = validarNombre(nombre);
+  if (!nameValidation.isValid) {
+    errorMessage = nameValidation.message;
+    aplicarEstiloErrorRegister(nombreInput, true);
+    elementsWithError.push(nombreInput);
+  } else {
+    aplicarEstiloErrorRegister(nombreInput, false);
   }
 
-  if (mensajeError) {
-    errorBox.textContent = mensajeError;
+  // Validar email
+  const emailValidation = validarEmailRegister(email);
+  if (!emailValidation.isValid) {
+    errorMessage = errorMessage || emailValidation.message;
+    aplicarEstiloErrorRegister(emailInput, true);
+    elementsWithError.push(emailInput);
+  } else {
+    aplicarEstiloErrorRegister(emailInput, false);
+  }
+
+  // Validar contraseña 1
+  const password1Validation = validarContraseñaRegister(pass1);
+  if (!password1Validation.isValid) {
+    errorMessage = errorMessage || password1Validation.message;
+    aplicarEstiloErrorRegister(passwordInput, true);
+    elementsWithError.push(passwordInput);
+  } else {
+    aplicarEstiloErrorRegister(passwordInput, false);
+  }
+
+  // Validar contraseña 2 (solo si el primero pasó validación)
+  if (password1Validation.isValid) {
+    const password2Validation = validarContraseñaRegister(pass2);
+    if (!password2Validation.isValid) {
+      errorMessage = errorMessage || password2Validation.message;
+      aplicarEstiloErrorRegister(password2Input, true);
+      elementsWithError.push(password2Input);
+    } else {
+      aplicarEstiloErrorRegister(password2Input, false);
+      
+      // Validar coincidencia de contraseñas
+      const matchValidation = validarContraseñasCoinciden(pass1, pass2);
+      if (!matchValidation.isValid) {
+        errorMessage = errorMessage || matchValidation.message;
+        aplicarEstiloErrorRegister(passwordInput, true);
+        aplicarEstiloErrorRegister(password2Input, true);
+        elementsWithError.push(passwordInput, password2Input);
+      }
+    }
+  }
+
+  // Si hay errores, mostrar y retornar
+  if (errorMessage) {
+    errorBox.textContent = errorMessage;
     errorBox.classList.remove("hidden");
-    [nombreInput, emailInput, passwordInput, password2Input].forEach(el => el.classList.add("ring-2", "ring-red-500"));
-    setTimeout(() => {
-      [nombreInput, emailInput, passwordInput, password2Input].forEach(el => el.classList.remove("ring-2", "ring-red-500"));
-    }, 2000);
+    limpiarEstilosErrorRegister(elementsWithError);
     return;
   }
 
-  // Demo: marcar como "registrado" y volver al login con el email recordado
-  localStorage.setItem("taskflow_email", email);
+  // Demo: guardar email y redirigir al login (en producción, enviaríamos a la base de datos)
+  localStorage.setItem(REGISTER_CONFIG.storageKeys.email, email);
   window.location.href = "login.html";
 }
+
+/**
+ * Inicializa la página cargando preferencias guardadas.
+ * Sincroniza el modo oscuro/claro desde localStorage.
+ * @returns {void}
+ */
+function inicializarPaginaRegister() {
+  // Sincronizar modo oscuro desde localStorage
+  const modo = localStorage.getItem(REGISTER_CONFIG.storageKeys.modo);
+  if (modo === "dark") {
+    document.documentElement.classList.add("dark");
+  }
+  
+  const toggleBtn = document.getElementById("modoRegisterBtn");
+  if (toggleBtn) {
+    toggleBtn.textContent = document.documentElement.classList.contains("dark") ? "☀️" : "🌙";
+  }
+
+  // Adjuntar evento al formulario de registro
+  const form = document.getElementById("formRegister");
+  if (form) {
+    form.addEventListener("submit", manejarRegistro);
+  }
+}
+
+// ==================== INICIALIZACIÓN ====================
+
+// Ejecutar inicialización cuando el DOM esté listo
+document.addEventListener("DOMContentLoaded", inicializarPaginaRegister);
 </script>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-indigo-950 via-slate-900 to-black text-white 
@@ -89,7 +285,7 @@ transition-colors duration-500 flex items-center justify-center px-4">
     <h1 class="text-xl font-semibold tracking-tight">Crear cuenta</h1>
     <p class="text-xs text-white/70 dark:text-black/60 mt-1">Vincula tu correo para acceder desde cualquier dispositivo.</p>
 
-    <form id="formRegister" class="space-y-4 mt-5" novalidate onsubmit="manejarRegistro(event)">
+    <form id="formRegister" class="space-y-4 mt-5" novalidate>
       <div>
         <label for="nombre" class="block text-sm mb-1">Nombre</label>
         <input

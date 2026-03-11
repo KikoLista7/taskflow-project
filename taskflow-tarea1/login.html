@@ -12,96 +12,219 @@ tailwind.config = {
 }
 </script>
 <script>
-// Sincroniza el modo oscuro/claro con la preferencia guardada
-document.addEventListener("DOMContentLoaded", function () {
-  const modo = localStorage.getItem("modo");
-  if (modo === "dark") {
-    document.documentElement.classList.add("dark");
-  }
-  const toggle = document.getElementById("modoLoginBtn");
-  if (toggle) {
-    toggle.textContent = document.documentElement.classList.contains("dark") ? "☀️" : "🌙";
-  }
-});
+// ==================== CONSTANTES DE CONFIGURACIÓN ====================
 
-function toggleDarkLogin() {
-  document.documentElement.classList.toggle("dark");
-  const esOscuro = document.documentElement.classList.contains("dark");
-  localStorage.setItem("modo", esOscuro ? "dark" : "light");
-  const boton = document.getElementById("modoLoginBtn");
-  if (boton) {
-    boton.textContent = esOscuro ? "☀️" : "🌙";
+const LOGIN_CONFIG = {
+  minPasswordLength: 6,
+  maxPasswordLength: 128,
+  minEmailLength: 5,
+  maxEmailLength: 254,
+  tiempoAnimacionError: 2000,
+  tiempoRedirect: 900,
+  storageKeys: {
+    email: "taskflow_email",
+    autenticado: "taskflow_autenticado",
+    modo: "modo"
+  }
+};
+
+// Expresión regular para validar email en formato RFC5322 simplificado
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// ==================== FUNCIONES AUXILIARES ====================
+
+/**
+ * Aplica estilos visuales de error a un elemento del formulario.
+ * Añade clases de error para proporcionar retroalimentación visual.
+ * @param {HTMLElement} element - Elemento a marcar como error.
+ * @param {boolean} show - Si true muestra el error, si false lo oculta.
+ * @returns {void}
+ */
+function aplicarEstiloErrorLogin(element, show = true) {
+  if (show) {
+    element.classList.add("ring-2", "ring-red-500");
+  } else {
+    element.classList.remove("ring-2", "ring-red-500");
   }
 }
 
+/**
+ * Limpia los estilos de error de múltiples elementos tras un delay.
+ * @param {HTMLElement[]} elements - Array de elementos a limpiar.
+ * @param {number} [delay] - Retraso en milisegundos antes de limpiar.
+ * @returns {void}
+ */
+function limpiarEstilosErrorLogin(elements, delay = LOGIN_CONFIG.tiempoAnimacionError) {
+  setTimeout(() => {
+    elements.forEach(el => aplicarEstiloErrorLogin(el, false));
+  }, delay);
+}
+
+/**
+ * Valida el formato y longitud de un correo electrónico.
+ * @param {string} email - Correo a validar.
+ * @returns {Object} Objeto con propiedades: isValid (boolean) y message (string de error).
+ */
+function validarEmail(email) {
+  if (!email) {
+    return { isValid: false, message: "Por favor introduce tu correo electrónico." };
+  }
+  if (email.length < LOGIN_CONFIG.minEmailLength) {
+    return { isValid: false, message: "El correo debe tener al menos 5 caracteres." };
+  }
+  if (email.length > LOGIN_CONFIG.maxEmailLength) {
+    return { isValid: false, message: "El correo es demasiado largo (máximo 254 caracteres)." };
+  }
+  if (!EMAIL_REGEX.test(email)) {
+    return { isValid: false, message: "El formato del correo no es válido (ej: usuario@ejemplo.com)." };
+  }
+  return { isValid: true, message: "" };
+}
+
+/**
+ * Valida el formato y longitud de una contraseña.
+ * @param {string} password - Contraseña a validar.
+ * @returns {Object} Objeto con propiedades: isValid (boolean) y message (string de error).
+ */
+function validarContraseña(password) {
+  if (!password) {
+    return { isValid: false, message: "Por favor introduce tu contraseña." };
+  }
+  if (password.length < LOGIN_CONFIG.minPasswordLength) {
+    return { isValid: false, message: `La contraseña debe tener al menos ${LOGIN_CONFIG.minPasswordLength} caracteres.` };
+  }
+  if (password.length > LOGIN_CONFIG.maxPasswordLength) {
+    return { isValid: false, message: `La contraseña es demasiado larga (máximo ${LOGIN_CONFIG.maxPasswordLength} caracteres).` };
+  }
+  return { isValid: true, message: "" };
+}
+
+/**
+ * Alterna el modo oscuro/claro y persiste la preferencia en localStorage.
+ * Actualiza el icono del botón según el modo activo.
+ * @returns {void}
+ */
+function toggleDarkLogin() {
+  document.documentElement.classList.toggle("dark");
+  const isDark = document.documentElement.classList.contains("dark");
+  localStorage.setItem(LOGIN_CONFIG.storageKeys.modo, isDark ? "dark" : "light");
+  
+  const boton = document.getElementById("modoLoginBtn");
+  if (boton) {
+    boton.textContent = isDark ? "☀️" : "🌙";
+  }
+}
+
+/**
+ * Maneja el envío del formulario de login.
+ * Valida email y contraseña, muestra errores si es necesario, simula el login y redirige.
+ * @param {Event} event - Evento de envío del formulario.
+ * @returns {void}
+ */
 function manejarLogin(event) {
   event.preventDefault();
+  
   const emailInput = document.getElementById("email");
   const passwordInput = document.getElementById("password");
-  const recordarInput = document.getElementById("recordar");
+  const rememberCheckbox = document.getElementById("recordar");
   const errorBox = document.getElementById("errorLogin");
+  const submitBtn = document.getElementById("btnAcceder");
 
   const email = emailInput.value.trim();
   const password = passwordInput.value.trim();
 
+  // Limpiar mensaje de error previo
   errorBox.textContent = "";
   errorBox.classList.add("hidden");
 
-  let mensajeError = "";
-  if (!email) {
-    mensajeError = "Por favor introduce tu correo electrónico.";
-  } else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-    mensajeError = "El formato del correo no es válido.";
-  } else if (!password) {
-    mensajeError = "Por favor introduce tu contraseña.";
-  } else if (password.length < 6) {
-    mensajeError = "La contraseña debe tener al menos 6 caracteres.";
+  const elementsWithError = [];
+  let errorMessage = "";
+
+  // Validar email
+  const emailValidation = validarEmail(email);
+  if (!emailValidation.isValid) {
+    errorMessage = emailValidation.message;
+    aplicarEstiloErrorLogin(emailInput, true);
+    elementsWithError.push(emailInput);
+  } else {
+    aplicarEstiloErrorLogin(emailInput, false);
   }
 
-  if (mensajeError) {
-    errorBox.textContent = mensajeError;
+  // Validar contraseña
+  const passwordValidation = validarContraseña(password);
+  if (!passwordValidation.isValid) {
+    errorMessage = errorMessage || passwordValidation.message;
+    aplicarEstiloErrorLogin(passwordInput, true);
+    elementsWithError.push(passwordInput);
+  } else {
+    aplicarEstiloErrorLogin(passwordInput, false);
+  }
+
+  // Si hay errores, mostrar y retornar
+  if (errorMessage) {
+    errorBox.textContent = errorMessage;
     errorBox.classList.remove("hidden");
-    emailInput.classList.add("ring-2", "ring-red-500");
-    passwordInput.classList.add("ring-2", "ring-red-500");
-    setTimeout(() => {
-      emailInput.classList.remove("ring-2", "ring-red-500");
-      passwordInput.classList.remove("ring-2", "ring-red-500");
-    }, 2000);
+    limpiarEstilosErrorLogin(elementsWithError);
     return;
   }
 
-  if (recordarInput.checked) {
-    localStorage.setItem("taskflow_email", email);
+  // Guardar preferencia de recordar correo
+  if (rememberCheckbox.checked) {
+    localStorage.setItem(LOGIN_CONFIG.storageKeys.email, email);
   } else {
-    localStorage.removeItem("taskflow_email");
+    localStorage.removeItem(LOGIN_CONFIG.storageKeys.email);
   }
 
-  // Simulación de login correcto: podrías sustituir esto por una petición real en el futuro
-  localStorage.setItem("taskflow_autenticado", "1");
+  // Simular autenticación (en producción, esto sería una petición real al servidor)
+  localStorage.setItem(LOGIN_CONFIG.storageKeys.autenticado, "1");
 
-  const boton = document.getElementById("btnAcceder");
-  boton.disabled = true;
-  boton.textContent = "Accediendo...";
+  // Mostrar estado de carga
+  submitBtn.disabled = true;
+  submitBtn.textContent = "Accediendo...";
 
+  // Redirigir a la página principal tras un pequeño delay
   setTimeout(() => {
     window.location.href = "index.html";
-  }, 900);
+  }, LOGIN_CONFIG.tiempoRedirect);
 }
 
-document.addEventListener("DOMContentLoaded", function () {
+/**
+ * Inicializa la página cargando preferencias guardadas.
+ * Sincroniza el modo oscuro/claro y restaura el email si está marcado "Recordar".
+ * @returns {void}
+ */
+function inicializarPaginaLogin() {
+  // Sincronizar modo oscuro desde localStorage
+  const modo = localStorage.getItem(LOGIN_CONFIG.storageKeys.modo);
+  if (modo === "dark") {
+    document.documentElement.classList.add("dark");
+  }
+  
+  const toggleBtn = document.getElementById("modoLoginBtn");
+  if (toggleBtn) {
+    toggleBtn.textContent = document.documentElement.classList.contains("dark") ? "☀️" : "🌙";
+  }
+
+  // Adjuntar evento al formulario
   const form = document.getElementById("formLogin");
   if (form) {
     form.addEventListener("submit", manejarLogin);
   }
 
-  const emailGuardado = localStorage.getItem("taskflow_email");
-  if (emailGuardado) {
+  // Restaurar email guardado si existe
+  const savedEmail = localStorage.getItem(LOGIN_CONFIG.storageKeys.email);
+  if (savedEmail) {
     const emailInput = document.getElementById("email");
-    const recordarInput = document.getElementById("recordar");
-    if (emailInput) emailInput.value = emailGuardado;
-    if (recordarInput) recordarInput.checked = true;
+    const rememberCheckbox = document.getElementById("recordar");
+    if (emailInput) emailInput.value = savedEmail;
+    if (rememberCheckbox) rememberCheckbox.checked = true;
   }
-});
+}
+
+// ==================== INICIALIZACIÓN ====================
+
+// Ejecutar inicialización cuando el DOM esté listo
+document.addEventListener("DOMContentLoaded", inicializarPaginaLogin);
 </script>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-indigo-950 via-slate-900 to-black text-white 
