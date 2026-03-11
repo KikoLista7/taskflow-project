@@ -685,21 +685,33 @@ function cargarTareasIniciales(){
   guardarOrden();
 }
 
-/**
- * Filtra visualmente las tareas del tablero a partir de un texto de búsqueda.
- * @param {string} texto - Texto a buscar dentro del contenido de cada tarea.
- */
-function buscar(texto){
-  const tareas = document.querySelectorAll("li")
-  tareas.forEach(t=>{
-    const contenido = t.innerText.toLowerCase()
-    t.style.display = contenido.includes(texto.toLowerCase()) ? "flex" : "none"
-  })
+function normalizarTexto(texto) {
+    if (!texto) return "";
+    return texto
+        .toLowerCase()
+        .normalize('NFD') // Separa las letras de los acentos (ej: "á" -> "a" + "´")
+        .replace(/[\u0300-\u036f]/g, ''); // Elimina los acentos (diacríticos)
 }
 
 /**
- * Marca o desmarca todas las tareas a la vez según el estado actual.
+ * Filtra visualmente las tareas del tablero a partir de un texto de búsqueda.
+ * La búsqueda ignora mayúsculas/minúsculas y acentos.
+ * @param {string} texto - Texto a buscar dentro del contenido de cada tarea.
  */
+function buscar(texto) {
+    const tareas = document.querySelectorAll("li");
+    // Normalizamos el término de búsqueda una sola vez fuera del bucle
+    const textoNormalizado = normalizarTexto(texto);
+
+    tareas.forEach(t => {
+        // Normalizamos el contenido de la tarea en cada iteración
+        const contenidoNormalizado = normalizarTexto(t.innerText);
+        
+        // Comparamos los textos ya normalizados
+        t.style.display = contenidoNormalizado.includes(textoNormalizado) ? "flex" : "none";
+    });
+}
+
 function completarTodas(){
   const checks = document.querySelectorAll("input[type='checkbox']")
   const total = checks.length
