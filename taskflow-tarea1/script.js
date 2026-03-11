@@ -135,16 +135,17 @@ function agregarTarea(){
  * @param {boolean} [completada=false] - Estado inicial de completado.
  */
 function crearTareaEnDOM(tareaObj, animacion = true) {
-  const { id, tipo, tarea, prioridad, completed, descripcion } = tareaObj;
+    const { id, tipo, tarea, prioridad, completed, descripcion } = tareaObj;
 
-  let grupo = document.getElementById("grupo-" + tipo);
+    let grupo = document.getElementById("grupo-" + tipo);
 
-  if (!grupo) {
-      grupo = document.createElement("div");
-      grupo.id = "grupo-" + tipo;
-      grupo.className = "bg-white/5 dark:bg-black/10 backdrop-blur-md p-4 rounded-xl shadow-lg";
-      grupo.dataset.tipo = tipo;
-      grupo.innerHTML = `
+    if (!grupo) {
+        // ... (el código para crear un nuevo grupo no cambia)
+        grupo = document.createElement("div");
+        grupo.id = "grupo-" + tipo;
+        grupo.className = "bg-white/5 dark:bg-black/10 backdrop-blur-md p-4 rounded-xl shadow-lg";
+        grupo.dataset.tipo = tipo;
+        grupo.innerHTML = `
 <div class="flex justify-between items-center mb-2 cursor-move handle">
 <div class="flex items-center gap-2 cursor-move handle group">
   <span class="opacity-0 group-hover:opacity-40 transition text-sm">⋮⋮</span>
@@ -165,36 +166,33 @@ function crearTareaEnDOM(tareaObj, animacion = true) {
 <span class="leading-none">Nueva tarea</span>
 </button>
 `;
-      taskContainer.appendChild(grupo);
+        taskContainer.appendChild(grupo);
+        grupo.querySelector(".btn-editar").onclick = function () { editarGrupo(tipo); };
+        grupo.querySelector(".btn-eliminar").onclick = function () { confirmarEliminarGrupo(tipo); };
+        const btnAgregar = grupo.querySelector(".btn-agregar-subtarea");
+        btnAgregar.setAttribute("aria-label", "Añadir subtarea a " + tipo);
+        btnAgregar.onclick = function () { agregarSubtarea(tipo); };
+        activarSortableLista(grupo.querySelector(".lista"));
+        mostrarMensajeVacio();
+    }
 
-      grupo.querySelector(".btn-editar").onclick = function () { editarGrupo(tipo); };
-      grupo.querySelector(".btn-eliminar").onclick = function () { confirmarEliminarGrupo(tipo); };
-      const btnAgregar = grupo.querySelector(".btn-agregar-subtarea");
-      btnAgregar.setAttribute("aria-label", "Añadir subtarea a " + tipo);
-      btnAgregar.onclick = function () { agregarSubtarea(tipo); };
+    const lista = grupo.querySelector(".lista");
+    const { color, borde } = PRIORIDAD_COLORES[prioridad];
+    const item = document.createElement("li");
+    item.className = `flex flex-col bg-white/10 dark:bg-black/10 p-3 rounded-lg backdrop-blur-md hover:bg-white/20 dark:hover:bg-black/20 transition`;
+    item.dataset.id = id;
+    item.dataset.tipo = tipo;
+    item.dataset.tarea = tarea;
+    item.dataset.prioridad = prioridad;
 
-      activarSortableLista(grupo.querySelector(".lista"));
-      mostrarMensajeVacio();
-  }
+    if (animacion) {
+        item.style.opacity = "0";
+        item.style.transform = "translateY(10px)";
+    }
 
-  const lista = grupo.querySelector(".lista");
-  const { color, borde } = PRIORIDAD_COLORES[prioridad];
-
-  const item = document.createElement("li");
-  item.className = `flex flex-col bg-white/10 dark:bg-black/10 p-3 rounded-lg backdrop-blur-md hover:bg-white/20 dark:hover:bg-black/20 transition`;
-  item.dataset.id = id;
-  item.dataset.tipo = tipo;
-  item.dataset.tarea = tarea;
-  item.dataset.prioridad = prioridad;
-
-  if (animacion) {
-      item.style.opacity = "0";
-      item.style.transform = "translateY(10px)";
-  }
-
-  const contenidoPrincipal = document.createElement('div');
-  contenidoPrincipal.className = `flex justify-between items-center gap-3 border-l-4 ${borde} -ml-3 pl-3`;
-  contenidoPrincipal.innerHTML = `
+    const contenidoPrincipal = document.createElement('div');
+    contenidoPrincipal.className = `flex justify-between items-center gap-3 border-l-4 ${borde} -ml-3 pl-3`;
+    contenidoPrincipal.innerHTML = `
 <div class="flex items-center gap-2 flex-1 min-w-0">
 <input type="checkbox" onclick="completarTarea(this)" class="cursor-pointer flex-shrink-0" ${completed ? 'checked' : ''}>
 <span class="tarea-texto break-words cursor-pointer hover:bg-white/10 dark:hover:bg-black/20 hover:px-2 hover:py-1 hover:rounded transition-all ${completed ? 'line-through opacity-50' : ''}" title="Clic para ver/ocultar descripción">${tarea}</span>
@@ -205,78 +203,76 @@ function crearTareaEnDOM(tareaObj, animacion = true) {
 </div>
 `;
 
-  const descripcionCaja = document.createElement("div");
-  descripcionCaja.className = "mt-2 hidden descripcion-caja transition-all duration-300";
-  descripcionCaja.innerHTML = `<textarea class="descripcion-textarea w-full px-3 py-2 rounded-lg bg-black/10 dark:bg-white/5 border border-white/15 dark:border-black/20 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-white/60 dark:placeholder-black/50" rows="2" placeholder="Añade detalles..."></textarea>`;
-  
-  const textarea = descripcionCaja.querySelector('.descripcion-textarea');
-  textarea.value = descripcion || "";
+    const descripcionCaja = document.createElement("div");
+    descripcionCaja.className = "mt-2 hidden descripcion-caja transition-all duration-300";
+    descripcionCaja.innerHTML = `<textarea class="descripcion-textarea w-full px-3 py-2 rounded-lg bg-black/10 dark:bg-white/5 border border-white/15 dark:border-black/20 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-white/60 dark:placeholder-black/50" rows="2" placeholder="Añadir detalles..."></textarea>`;
 
-  item.appendChild(contenidoPrincipal);
-  item.appendChild(descripcionCaja);
+    const textarea = descripcionCaja.querySelector('.descripcion-textarea');
+    textarea.value = descripcion || "";
 
-  if (completed) {
-      item.classList.add("opacity-60");
-  }
+    item.appendChild(contenidoPrincipal);
+    item.appendChild(descripcionCaja);
 
-  const spanTarea = item.querySelector(".tarea-texto");
-  spanTarea.setAttribute("role", "button");
-  spanTarea.tabIndex = 0;
-  adjuntarListenersAlSpan(spanTarea, item);
+    if (completed) {
+        item.classList.add("opacity-60");
+    }
 
-  const badgePrioridad = item.querySelector(".prioridad-badge");
-  badgePrioridad.setAttribute("role", "button");
-  badgePrioridad.tabIndex = 0;
-  badgePrioridad.addEventListener("click", function () {
-      cambiarPrioridad(item, badgePrioridad);
-  });
-  badgePrioridad.addEventListener("keydown", function (e) {
-      if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          cambiarPrioridad(item, badgePrioridad);
-      }
-  });
+    const spanTarea = item.querySelector(".tarea-texto");
+    adjuntarListenersAlSpan(spanTarea, item);
 
-  // Evento para guardar la descripción al salir del foco
-  textarea.addEventListener("blur", function () {
-      const tareaObj = tareas.find(t => t.id == id);
-      if (tareaObj) {
-          tareaObj.descripcion = textarea.value.trim();
-          guardarTareas();
-      }
-  });
+    const badgePrioridad = item.querySelector(".prioridad-badge");
+    badgePrioridad.addEventListener("click", function () { cambiarPrioridad(item, badgePrioridad); });
+    badgePrioridad.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            cambiarPrioridad(item, badgePrioridad);
+        }
+    });
 
-  // --- ¡NUEVO CÓDIGO AÑADIDO! ---
-  // Evento para cerrar el desplegable con Enter en escritorio
-  textarea.addEventListener("keydown", function(event) {
-      // Detecta si el dispositivo NO es táctil (probablemente escritorio)
-      const isDesktop = !('ontouchstart' in window) && !navigator.maxTouchPoints;
+    // --- ¡NUEVA LÓGICA DEFINITIVA! ---
+    const sortableLista = sortableInstances[grupo.id];
 
-      // Si es escritorio y se pulsa Enter (sin la tecla Shift)
-      if (isDesktop && event.key === 'Enter' && !event.shiftKey) {
-          event.preventDefault(); // Previene que se cree una nueva línea
-          this.blur(); // Dispara el evento blur para guardar el contenido
-          descripcionCaja.classList.add('hidden'); // Cierra el desplegable
-      }
-  });
-  // --- FIN DEL NUEVO CÓDIGO ---
+    // Al entrar al textarea, DESACTIVAMOS el drag-and-drop de toda la lista
+    textarea.addEventListener("focus", function() {
+        if (sortableLista) {
+            sortableLista.option("disabled", true);
+        }
+    });
 
-  lista.appendChild(item);
-  actualizarProgreso();
+    // Al salir del textarea, guardamos y REACTIVAMOS el drag-and-drop
+    textarea.addEventListener("blur", function () {
+        if (sortableLista) {
+            sortableLista.option("disabled", false);
+        }
+        const tareaObj = tareas.find(t => t.id == id);
+        if (tareaObj) {
+            tareaObj.descripcion = textarea.value.trim();
+            guardarTareas();
+        }
+    });
 
-  if (animacion) {
-      setTimeout(() => {
-          item.style.opacity = "1";
-          item.style.transform = "translateY(0)";
-          item.style.transition = "all 0.3s ease";
-      }, 10);
-  }
+    textarea.addEventListener("keydown", function(event) {
+        const isDesktop = !('ontouchstart' in window) && !navigator.maxTouchPoints;
+        if (isDesktop && event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault();
+            this.blur();
+            descripcionCaja.classList.add('hidden');
+        }
+    });
+    // --- FIN DE LA NUEVA LÓGICA ---
+
+    lista.appendChild(item);
+    actualizarProgreso();
+
+    if (animacion) {
+        setTimeout(() => {
+            item.style.opacity = "1";
+            item.style.transform = "translateY(0)";
+            item.style.transition = "all 0.3s ease";
+        }, 10);
+    }
 }
 
-/**
- * Permite editar el nombre de un grupo y propaga los cambios a las tareas asociadas.
- * @param {string} nombreActual - Nombre actual del grupo.
- */
 function editarGrupo(nombreActual) {
   const grupo = document.getElementById("grupo-" + nombreActual);
   if (!grupo) return;
@@ -796,20 +792,19 @@ function actualizarProgreso(){
  * @param {HTMLElement} lista - Lista UL que contendrá tareas arrastrables.
  */
 function activarSortableLista(lista) {
-  const grupo = lista.closest('[id^="grupo-"]');
-  if (!grupo) return;
+    const grupo = lista.closest('[id^="grupo-"]');
+    if (!grupo) return;
 
-  const groupId = grupo.id;
-  const sortable = new Sortable(lista, {
-      animation: 150,
-      ghostClass: "opacity-50",
-      chosenClass: "bg-indigo-200",
-      dragClass: "rotate-1",
-      onEnd: guardarOrden
-  });
-  
-  // Guardamos la instancia para poder controlarla más tarde
-  sortableInstances[groupId] = sortable;
+    const groupId = grupo.id;
+    const sortable = new Sortable(lista, {
+        animation: 150,
+        ghostClass: "opacity-50",
+        chosenClass: "bg-indigo-200",
+        dragClass: "rotate-1",
+        onEnd: guardarOrden // Volvemos a la versión simple
+    });
+    
+    sortableInstances[groupId] = sortable;
 }
 
 function agregarSubtarea(tipo) {
@@ -948,19 +943,14 @@ window.onload = function(){
 
   const tareasGuardadas = localStorage.getItem("tareas");
 
-  // Lógica de carga mejorada:
-  // Si la clave "tareas" NO EXISTE, es la primera vez que el usuario entra.
   if (tareasGuardadas === null) {
     cargarTareasIniciales();
   } 
-  // Si la clave SÍ EXISTE (aunque sea una lista vacía "[]"), cargamos lo que haya.
   else {
-    cargarTareas(); // Carga las tareas en memoria (puede ser un array vacío)
-    cargarOrden();  // Intenta renderizar las tareas según el orden guardado
+    cargarTareas();
+    cargarOrden();
   }
 
-  // ¡LA CLAVE DEL ARREGLO!
-  // Después de haber intentado cargar todo, comprobamos si el contenedor está vacío.
   mostrarMensajeVacio();
 
   const mainSortable = new Sortable(taskContainer, {
@@ -968,11 +958,11 @@ window.onload = function(){
     ghostClass: "opacity-50",
     handle: ".handle",
     swapThreshold: 0.65,
-    onEnd: guardarOrden
+    onEnd: guardarOrden // Volvemos a la versión simple
   });
   sortableInstances['taskContainer'] = mainSortable;
 
-  // Toggle del sidebar en móvil con animación
+  // ... (el resto de la función del sidebar sigue igual) ...
   const toggleBtn = document.getElementById("toggleSidebar")
   const sidebarContent = document.getElementById("sidebarContent")
   const iconoToggle = document.getElementById("iconoToggle")
@@ -980,14 +970,12 @@ window.onload = function(){
   if(toggleBtn){
     toggleBtn.addEventListener("click", function(){
       if(sidebarContent.style.maxHeight && sidebarContent.style.maxHeight !== "0px"){
-        // Cerrar
         sidebarContent.style.maxHeight = "0px"
         sidebarContent.style.opacity = "0"
         sidebarContent.style.paddingTop = "0"
         sidebarContent.style.paddingBottom = "0"
         iconoToggle.style.transform = "rotate(0deg)"
       } else {
-        // Abrir
         sidebarContent.style.maxHeight = sidebarContent.scrollHeight + "px"
         sidebarContent.style.opacity = "1"
         sidebarContent.style.paddingTop = "1.25rem"
