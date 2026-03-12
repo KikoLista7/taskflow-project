@@ -205,10 +205,10 @@ function crearTareaEnDOM(tareaObj, animacion = true) {
         // ... (el código para crear un nuevo grupo no cambia)
         grupo = document.createElement("div");
         grupo.id = "grupo-" + tipo;
-        grupo.className = "bg-white/5 dark:bg-black/10 backdrop-blur-md p-4 rounded-xl shadow-lg";
+        grupo.className = "bg-white/5 dark:bg-black/10 backdrop-blur-md p-4 rounded-xl shadow-lg relative";
         grupo.dataset.tipo = tipo;
         grupo.innerHTML = `
-<div class="flex justify-between items-center mb-2 cursor-move handle">
+<div class="flex justify-between items-center mb-4 cursor-move handle">
 <div class="flex items-center gap-2 cursor-move handle group flex-1 min-w-0">
   <span class="opacity-0 group-hover:opacity-40 transition text-sm">⋮⋮</span>
   <h2 class="text-xl font-semibold tracking-wide truncate">${tipo}</h2>
@@ -218,9 +218,9 @@ function crearTareaEnDOM(tareaObj, animacion = true) {
     </svg>
   </button>
 </div>
-<button class="btn-toggle-mobile md:hidden text-gray-400 hover:text-white transition-transform duration-300 transform flex-shrink-0" title="Expandir/Contraer grupo" aria-label="Expandir/Contraer grupo" aria-expanded="true">
-  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 toggle-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+<button class="btn-toggle-mobile md:hidden absolute -bottom-3 left-1/2 transform -translate-x-1/2 text-gray-400 hover:text-gray-300 transition-transform duration-300" title="Expandir/Contraer grupo" aria-label="Expandir/Contraer grupo" aria-expanded="true">
+  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 toggle-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
   </svg>
 </button>
 <button class="btn-eliminar text-red-400 hover:text-red-500 transition transform hover:scale-110 hover:rotate-6 flex-shrink-0">
@@ -249,27 +249,29 @@ function crearTareaEnDOM(tareaObj, animacion = true) {
             grupoContenido.style.maxHeight = "0px";
             grupoContenido.style.opacity = "0";
             btnToggle.setAttribute("aria-expanded", "false");
-            toggleIcon.style.transform = "rotate(180deg)";
+            toggleIcon.style.transform = "rotate(0deg)"; // Apunta hacia abajo cuando cerrado
         } else {
             grupoContenido.style.maxHeight = "none";
             grupoContenido.style.opacity = "1";
+            btnToggle.setAttribute("aria-expanded", "true");
+            toggleIcon.style.transform = "rotate(180deg)"; // Apunta hacia arriba cuando abierto
         }
         
         btnToggle.onclick = function() {
             const isExpanded = btnToggle.getAttribute("aria-expanded") === "true";
             
             if (isExpanded) {
-                // Cerrar
+                // Cerrar - flecha apunta abajo
                 grupoContenido.style.maxHeight = "0px";
                 grupoContenido.style.opacity = "0";
                 btnToggle.setAttribute("aria-expanded", "false");
-                toggleIcon.style.transform = "rotate(180deg)";
+                toggleIcon.style.transform = "rotate(0deg)";
             } else {
-                // Abrir
+                // Abrir - flecha apunta arriba
                 grupoContenido.style.maxHeight = grupoContenido.scrollHeight + "px";
                 grupoContenido.style.opacity = "1";
                 btnToggle.setAttribute("aria-expanded", "true");
-                toggleIcon.style.transform = "rotate(0deg)";
+                toggleIcon.style.transform = "rotate(180deg)";
             }
         };
         
@@ -1306,7 +1308,7 @@ function inicializarManejadorRedimensionamiento() {
         // En desktop, expandir automáticamente todos los grupos
         grupoContenido.style.maxHeight = "none";
         grupoContenido.style.opacity = "1";
-        toggleIcon.style.transform = "rotate(0deg)";
+        toggleIcon.style.transform = "rotate(180deg)"; // Flecha hacia arriba en desktop
         btnToggle.setAttribute("aria-expanded", "true");
       }
     });

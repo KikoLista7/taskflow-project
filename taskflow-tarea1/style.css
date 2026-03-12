@@ -121,23 +121,33 @@ main {
 }
 
 .btn-toggle-mobile {
-  padding: 4px 8px;
-  border-radius: 6px;
+  padding: 2px 4px;
+  border-radius: 4px;
   background: transparent;
-  border: 1px solid transparent;
+  border: 1px solid rgba(255, 255, 255, 0.05);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  line-height: 1;
 }
 
 .btn-toggle-mobile:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
 .btn-toggle-mobile .toggle-icon {
   transition: transform 0.3s ease;
+}
+
+.dark .btn-toggle-mobile {
+  border-color: rgba(0, 0, 0, 0.05);
+}
+
+.dark .btn-toggle-mobile:hover {
+  background: rgba(0, 0, 0, 0.08);
+  border-color: rgba(0, 0, 0, 0.15);
 }
 
 @media (max-width: 768px) {
