@@ -1374,20 +1374,18 @@ function inicializarToggleSidebar() {
       iconoToggle.style.transform = "rotate(0deg)";
       // Mostrar buscador normalmente
       if (searchSection) {
-        searchSection.style.maxHeight = "none";
+        searchSection.style.display = "block";
         searchSection.style.opacity = "1";
-        searchSection.style.marginTop = "0";
+        searchSection.style.maxHeight = "none";
       }
     } else {
       // Abrir sidebar
       sidebarContent.style.maxHeight = sidebarContent.scrollHeight + "px";
       sidebarContent.style.opacity = "1";
       iconoToggle.style.transform = "rotate(180deg)";
-      // Comprimir buscador en móvil cuando abre sidebar
+      // Comprimir buscador en móvil cuando abre sidebar - usar display en lugar de margin
       if (searchSection && window.innerWidth < 768) {
-        searchSection.style.maxHeight = "0px";
-        searchSection.style.opacity = "0";
-        searchSection.style.marginTop = "-2rem";
+        searchSection.style.display = "none";
       }
     }
   });
@@ -1396,6 +1394,7 @@ function inicializarToggleSidebar() {
 /**
  * Recalcula el maxHeight de todos los grupos expandidos en móvil.
  * Útil cuando el contenido cambia dinámicamente (agregar/eliminar tareas).
+ * SEGURIDAD: Asegura que scrollHeight sea válido antes de asignar.
  * @returns {void}
  */
 function recalcularMaxHeights() {
@@ -1407,10 +1406,14 @@ function recalcularMaxHeights() {
     if (!tasksContainer) return;
     
     if (grupo.dataset.expanded === "true") {
-      // Recalcular el scrollHeight actual
-      tasksContainer.style.maxHeight = "auto";
-      const currentHeight = tasksContainer.scrollHeight;
-      tasksContainer.style.maxHeight = currentHeight + "px";
+      // Usar requestAnimationFrame para asegurar que el navegador ha pintado
+      requestAnimationFrame(() => {
+        const currentHeight = tasksContainer.scrollHeight;
+        // Validación: asegurar que scrollHeight sea válido
+        if (currentHeight > 0) {
+          tasksContainer.style.maxHeight = currentHeight + "px";
+        }
+      });
     }
   });
 }
@@ -1421,30 +1424,66 @@ function recalcularMaxHeights() {
  * @returns {void}
  */
 function inicializarManejadorRedimensionamiento() {
+  // Prevenir múltiples listeners con debounce
+  let resizeTimeout = null;
+  
   window.addEventListener("resize", () => {
-    const isMobile = window.innerWidth < 768;
-    const grupos = document.querySelectorAll("[id^='grupo-']");
+    // Debounce: no procesar más de una vez cada 250ms
+    if (resizeTimeout) {
+      clearTimeout(resizeTimeout);
+    }
     
-    grupos.forEach(grupo => {
-      const wrapper = grupo.closest(".grupo-wrapper");
-      const btnToggle = wrapper?.querySelector(".btn-toggle-group-mobile");
-      const tasksContainer = grupo.querySelector(".grupo-tasks-container");
+    resizeTimeout = setTimeout(() => {
+      const isMobile = window.innerWidth < 768;
+      const grupos = document.querySelectorAll("[id^='grupo-']");
+      const sidebarContent = document.getElementById("sidebarContent");
+      const searchSection = document.getElementById("searchSection");
+      const toggleSidebar = document.getElementById("toggleSidebar");
       
-      if (!btnToggle) return;
+      grupos.forEach(grupo => {
+        const wrapper = grupo.closest(".grupo-wrapper");
+        const btnToggle = wrapper?.querySelector(".btn-toggle-group-mobile");
+        const tasksContainer = grupo.querySelector(".grupo-tasks-container");
+        
+        if (!btnToggle || !tasksContainer) return;
+        
+        if (isMobile) {
+          // En móvil: mostrar botón, mantener estado actual
+          btnToggle.style.display = "block";
+        } else {
+          // En desktop: ocultar botón y expandir contenedor
+          btnToggle.style.display = "none";
+          tasksContainer.style.maxHeight = "none";
+          tasksContainer.style.opacity = "1";
+          tasksContainer.style.marginTop = "1rem";
+          btnToggle.style.transform = "scaleY(1)";
+          grupo.dataset.expanded = "true";
+        }
+      });
       
-      if (isMobile) {
-        // En móvil: mostrar botón, mantener estado actual
-        btnToggle.style.display = "block";
+      // Resetear estado del sidebar y searchSection al cambiar entre breakpoints
+      if (!isMobile) {
+        // En desktop: mostrar todo normalmente
+        if (sidebarContent) {
+          sidebarContent.style.maxHeight = "none";
+          sidebarContent.style.opacity = "1";
+        }
+        if (searchSection) {
+          searchSection.style.display = "block";
+          searchSection.style.opacity = "1";
+        }
+        if (toggleSidebar) {
+          const iconoToggle = document.getElementById("iconoToggle");
+          if (iconoToggle) iconoToggle.style.transform = "rotate(0deg)";
+        }
       } else {
-        // En desktop: ocultar botón y expandir contenedor
-        btnToggle.style.display = "none";
-        tasksContainer.style.maxHeight = "none";
-        tasksContainer.style.opacity = "1";
-        tasksContainer.style.marginTop = "1rem";
-        btnToggle.style.transform = "scaleY(1)";
-        grupo.dataset.expanded = "true";
+        // En móvil: resetear sidebar a estado cerrado si es necesario
+        if (sidebarContent && sidebarContent.style.maxHeight !== "0px") {
+          sidebarContent.style.maxHeight = "0px";
+          sidebarContent.style.opacity = "0";
+        }
       }
-    });
+    }, 250);
   });
 }
 

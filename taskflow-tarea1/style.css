@@ -29,9 +29,6 @@ body {
 /* RESPONSIVE: Estilos que NO deben interferir con Tailwind */
 /* El HTML usa Tailwind, estos estilos son solo complementarios */
 
-/* RESPONSIVE: Estilos que NO deben interferir con Tailwind */
-/* El HTML usa Tailwind, estos estilos son solo complementarios */
-
 /* Wrapper que mantiene grupo y botón juntos */
 .grupo-wrapper {
   position: relative;
@@ -40,12 +37,13 @@ body {
 /* Contenedor de tareas de un grupo - colapsable en móvil */
 .grupo-tasks-container {
   overflow: hidden;
+  will-change: max-height;
 }
 
 /* Animación suave para expand/collapse EN MÓVIL */
 @media (max-width: 767px) {
   .grupo-tasks-container {
-    transition: max-height 0.3s ease, opacity 0.3s ease, margin-top 0.3s ease;
+    transition: max-height 0.3s ease, opacity 0.3s ease;
   }
 }
 
@@ -55,6 +53,7 @@ body {
     max-height: none !important;
     opacity: 1 !important;
     overflow: visible !important;
+    will-change: auto;
   }
 }
 
@@ -62,18 +61,24 @@ body {
 .btn-toggle-group-mobile {
   font-size: 0.75rem;
   padding: 0;
+  will-change: transform;
 }
 
 /* Sección de búsqueda - transición suave al abrir/cerrar sidebar */
 #searchSection {
   overflow: hidden;
-  transition: max-height 0.3s ease, opacity 0.3s ease, margin-top 0.3s ease;
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+  display: block;
+  will-change: max-height, opacity;
 }
 
 /* Ajuste del sidebar colapsable */
 #sidebarContent {
   padding-top: 0.5rem !important;
   padding-bottom: 0.5rem !important;
+  z-index: 50;
+  position: relative;
+  will-change: max-height, opacity;
 }
 
 @media (min-width: 1024px) {
@@ -90,6 +95,12 @@ body {
   body, html, main {
     overflow-x: hidden !important;
     max-width: 100vw !important;
+    position: relative;
+  }
+  
+  /* Asegurar que el contenedor principal no se desborde */
+  aside {
+    max-width: 100vw;
   }
 }
 
