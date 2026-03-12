@@ -233,46 +233,78 @@ function crearTareaEnDOM(tareaObj, animacion = true) {
 `;
         taskContainer.appendChild(grupo);
         
-        // En móvil: crear botón de toggle pequeño
+        // Crear botón de toggle para móvil (siempre, pero se muestra solo en móvil)
+        const btnToggleMobile = document.createElement("button");
+        btnToggleMobile.className = "btn-toggle-group-mobile";
+        btnToggleMobile.setAttribute("type", "button");
+        btnToggleMobile.setAttribute("aria-label", `Expandir/contraer grupo ${tipo}`);
+        btnToggleMobile.innerHTML = "▶";
+        btnToggleMobile.style.cssText = `
+            display: none;
+            width: 100%;
+            text-align: center;
+            padding: 0.5rem 0;
+            margin-top: 0.5rem;
+            margin-bottom: 1rem;
+            background: transparent;
+            border: none;
+            color: rgb(156, 163, 175);
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: color 0.2s ease, background-color 0.2s ease;
+            border-radius: 0.375rem;
+        `;
+        
+        grupo.parentNode.insertBefore(btnToggleMobile, grupo.nextSibling);
+        
+        const tasksContainer = grupo.querySelector(".grupo-tasks-container");
+        
+        // Configuración para móvil
         if (window.innerWidth < 768) {
-            const btnToggleMobile = document.createElement("button");
-            btnToggleMobile.className = "btn-toggle-group-mobile hidden lg:hidden absolute -bottom-5 left-1/2 transform -translate-x-1/2 w-6 h-6 text-center text-gray-400 hover:text-white transition-colors cursor-pointer text-lg leading-none";
-            btnToggleMobile.setAttribute("type", "button");
-            btnToggleMobile.setAttribute("aria-label", `Expandir/contraer grupo ${tipo}`);
-            btnToggleMobile.innerHTML = "▼"; // Por defecto abierto
-            
-            grupo.parentNode.insertBefore(btnToggleMobile, grupo.nextSibling);
-            
-            const tasksContainer = grupo.querySelector(".grupo-tasks-container");
-            
-            btnToggleMobile.addEventListener("click", (e) => {
-                e.preventDefault();
-                const isExpanded = grupo.dataset.expanded === "true";
-                
-                if (isExpanded) {
-                    // Cerrar
-                    tasksContainer.style.maxHeight = "0px";
-                    tasksContainer.style.opacity = "0";
-                    tasksContainer.style.marginTop = "0";
-                    btnToggleMobile.innerHTML = "▶";
-                    grupo.dataset.expanded = "false";
-                } else {
-                    // Abrir
-                    tasksContainer.style.maxHeight = tasksContainer.scrollHeight + "px";
-                    tasksContainer.style.opacity = "1";
-                    tasksContainer.style.marginTop = "1rem";
-                    btnToggleMobile.innerHTML = "▼";
-                    grupo.dataset.expanded = "true";
-                }
-            });
-            
-            // Por defecto en móvil: cerrado
+            btnToggleMobile.style.display = "block";
             tasksContainer.style.maxHeight = "0px";
             tasksContainer.style.opacity = "0";
             tasksContainer.style.marginTop = "0";
-            btnToggleMobile.innerHTML = "▶";
             grupo.dataset.expanded = "false";
+        } else {
+            // En desktop: siempre visible
+            tasksContainer.style.maxHeight = "none";
+            tasksContainer.style.opacity = "1";
+            tasksContainer.style.marginTop = "1rem";
+            grupo.dataset.expanded = "true";
         }
+        
+        btnToggleMobile.addEventListener("click", (e) => {
+            e.preventDefault();
+            const isExpanded = grupo.dataset.expanded === "true";
+            
+            if (isExpanded) {
+                // Cerrar
+                tasksContainer.style.maxHeight = "0px";
+                tasksContainer.style.opacity = "0";
+                tasksContainer.style.marginTop = "0";
+                btnToggleMobile.innerHTML = "▶";
+                grupo.dataset.expanded = "false";
+            } else {
+                // Abrir
+                tasksContainer.style.maxHeight = tasksContainer.scrollHeight + "px";
+                tasksContainer.style.opacity = "1";
+                tasksContainer.style.marginTop = "1rem";
+                btnToggleMobile.innerHTML = "▼";
+                grupo.dataset.expanded = "true";
+            }
+        });
+        
+        btnToggleMobile.addEventListener("mouseover", () => {
+            btnToggleMobile.style.color = "rgb(229, 231, 235)";
+            btnToggleMobile.style.backgroundColor = "rgba(255, 255, 255, 0.05)";
+        });
+        
+        btnToggleMobile.addEventListener("mouseout", () => {
+            btnToggleMobile.style.color = "rgb(156, 163, 175)";
+            btnToggleMobile.style.backgroundColor = "transparent";
+        });
         
         grupo.querySelector(".btn-editar").onclick = function () { editarGrupo(tipo); };
         grupo.querySelector(".btn-eliminar").onclick = function () { confirmarEliminarGrupo(tipo); };
@@ -1134,10 +1166,11 @@ function agregarSubtarea(tipo) {
       // Actualizar maxHeight si está en móvil y el grupo está expandido
       const isMobile = window.innerWidth < 768;
       if (isMobile) {
-          const tasksContainer = grupo.querySelector(".grupo-tasks-container");
-          const btnToggle = grupo.nextElementSibling;
+          const grupoElement = document.getElementById("grupo-" + tipo);
+          const tasksContainer = grupoElement?.querySelector(".grupo-tasks-container");
+          const btnToggle = grupoElement?.nextElementSibling;
           
-          if (btnToggle?.classList.contains("btn-toggle-group-mobile") && grupo.dataset.expanded === "true") {
+          if (btnToggle?.classList.contains("btn-toggle-group-mobile") && grupoElement?.dataset.expanded === "true") {
               setTimeout(() => {
                   tasksContainer.style.maxHeight = tasksContainer.scrollHeight + "px";
               }, 50);
@@ -1311,20 +1344,18 @@ function inicializarManejadorRedimensionamiento() {
       const btnToggle = grupo.nextElementSibling;
       const tasksContainer = grupo.querySelector(".grupo-tasks-container");
       
-      // Si no existe el botón toggle (no está en móvil), no hacer nada
       if (!btnToggle?.classList.contains("btn-toggle-group-mobile")) return;
       
-      if (!isMobile) {
-        // En desktop: expandir todos los grupos automáticamente
+      if (isMobile) {
+        // En móvil: mostrar botón, mantener estado actual
+        btnToggle.style.display = "block";
+      } else {
+        // En desktop: ocultar botón y expandir contenedor
+        btnToggle.style.display = "none";
         tasksContainer.style.maxHeight = "none";
         tasksContainer.style.opacity = "1";
         tasksContainer.style.marginTop = "1rem";
-        btnToggle.innerHTML = "▼";
         grupo.dataset.expanded = "true";
-        btnToggle.style.display = "none";
-      } else {
-        // En móvil: mostrar botón y mantener estado actual
-        btnToggle.style.display = "block";
       }
     });
   });

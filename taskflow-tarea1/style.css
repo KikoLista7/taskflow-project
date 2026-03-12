@@ -32,34 +32,33 @@ body {
 /* RESPONSIVE: Estilos que NO deben interferir con Tailwind */
 /* El HTML usa Tailwind, estos estilos son solo complementarios */
 
+/* Contenedor de tareas de un grupo - colapsable en móvil */
+.grupo-tasks-container {
+  overflow: hidden;
+}
+
+/* Animación suave para expand/collapse EN MÓVIL */
+@media (max-width: 767px) {
+  .grupo-tasks-container {
+    transition: max-height 0.3s ease, opacity 0.3s ease, margin-top 0.3s ease;
+  }
+}
+
+/* En desktop: siempre visible sin transiciones */
+@media (min-width: 768px) {
+  .grupo-tasks-container {
+    max-height: none !important;
+    opacity: 1 !important;
+    overflow: visible !important;
+  }
+}
+
 /* Botón toggle para grupos en móvil - solo flecha pequeña */
 .btn-toggle-group-mobile {
   font-size: 0.75rem;
   padding: 0;
   margin-top: 0.5rem;
   margin-bottom: 1rem;
-}
-
-/* Contenedor de tareas de un grupo - colapsable en móvil */
-.grupo-tasks-container {
-  max-height: none;
-  opacity: 1;
-  overflow: visible;
-}
-
-/* Animación suave para expand/collapse */
-@media (max-width: 767px) {
-  .grupo-tasks-container {
-    overflow: hidden;
-    transition: max-height 0.3s ease, opacity 0.3s ease, margin-top 0.3s ease;
-  }
-}
-
-/* En desktop: siempre visible */
-@media (min-width: 1024px) {
-  .btn-toggle-group-mobile {
-    display: none !important;
-  }
 }
 
 /* Ajuste del sidebar colapsable */
