@@ -205,7 +205,7 @@ function crearTareaEnDOM(tareaObj, animacion = true) {
         // ... (el código para crear un nuevo grupo no cambia)
         grupo = document.createElement("div");
         grupo.id = "grupo-" + tipo;
-        grupo.className = "bg-white/5 dark:bg-black/10 backdrop-blur-md p-4 rounded-xl shadow-lg relative";
+        grupo.className = "bg-white/5 dark:bg-black/10 backdrop-blur-md p-4 rounded-xl shadow-lg relative mb-6";
         grupo.dataset.tipo = tipo;
         grupo.innerHTML = `
 <div class="flex justify-between items-center mb-4 cursor-move handle pb-2 border-b border-white/5 dark:border-black/5">
@@ -222,13 +222,6 @@ function crearTareaEnDOM(tareaObj, animacion = true) {
   🗑️
 </button>
 </div>
-<div class="relative w-full flex justify-center py-2">
-  <button class="btn-toggle-mobile md:hidden text-gray-400 hover:text-gray-200 transition-all duration-300" title="Expandir/Contraer grupo" aria-label="Expandir/Contraer grupo" aria-expanded="true">
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 toggle-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-    </svg>
-  </button>
-</div>
 <div class="grupo-contenido transition-all duration-300 overflow-hidden">
 <ul class="space-y-2 lista"></ul>
 <button class="btn-agregar-subtarea mt-3 w-full bg-white/5 hover:bg-white/10 dark:bg-black/5 dark:hover:bg-black/10 border border-white/20 hover:border-indigo-400 rounded-lg py-2 text-sm transition-all flex items-center justify-center gap-1 group">
@@ -238,13 +231,35 @@ function crearTareaEnDOM(tareaObj, animacion = true) {
 </div>
 `;
         taskContainer.appendChild(grupo);
+        
+        // Crear y agregar botón circular externo
+        const btnToggle = document.createElement("button");
+        btnToggle.className = "btn-toggle-mobile md:hidden";
+        btnToggle.setAttribute("title", "Expandir/Contraer grupo");
+        btnToggle.setAttribute("aria-label", "Expandir/Contraer grupo");
+        btnToggle.setAttribute("aria-expanded", "true");
+        
+        const toggleIcon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        toggleIcon.setAttribute("class", "h-5 w-5 toggle-icon");
+        toggleIcon.setAttribute("fill", "none");
+        toggleIcon.setAttribute("viewBox", "0 0 24 24");
+        toggleIcon.setAttribute("stroke", "currentColor");
+        toggleIcon.setAttribute("stroke-width", "2.5");
+        
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute("stroke-linecap", "round");
+        path.setAttribute("stroke-linejoin", "round");
+        path.setAttribute("d", "M19 14l-7 7m0 0l-7-7m7 7V3");
+        
+        toggleIcon.appendChild(path);
+        btnToggle.appendChild(toggleIcon);
+        grupo.appendChild(btnToggle);
+        
         grupo.querySelector(".btn-editar").onclick = function () { editarGrupo(tipo); };
         grupo.querySelector(".btn-eliminar").onclick = function () { confirmarEliminarGrupo(tipo); };
         
         // Manejador del botón de toggle para móvil
-        const btnToggle = grupo.querySelector(".btn-toggle-mobile");
         const grupoContenido = grupo.querySelector(".grupo-contenido");
-        const toggleIcon = btnToggle.querySelector(".toggle-icon");
         
         // Por defecto, en móvil los grupos están cerrados (hidden)
         if (window.innerWidth < 768) {
