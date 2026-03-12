@@ -32,6 +32,15 @@ body {
 /* Wrapper que mantiene grupo y botón juntos */
 .grupo-wrapper {
   position: relative;
+  display: grid;
+  gap: 0;
+}
+
+/* En web: usar display contents para que no afecte el layout del grid principal */
+@media (min-width: 768px) {
+  .grupo-wrapper {
+    display: contents;
+  }
 }
 
 /* Contenedor de tareas de un grupo - colapsable en móvil */
@@ -63,7 +72,6 @@ body {
   
   .lista li {
     overflow: visible !important;
-    padding: 1rem !important; /* Asegurar suficiente espacio para ring */
   }
 }
 

@@ -261,7 +261,6 @@ function crearTareaEnDOM(tareaObj, animacion = true) {
         // Envolver grupo y botón en un contenedor para mantenerlos juntos durante drag
         const wrapper = document.createElement("div");
         wrapper.className = "grupo-wrapper";
-        wrapper.style.cssText = "display: contents;"; // Display contents preserva el layout
         grupo.parentNode.insertBefore(wrapper, grupo);
         wrapper.appendChild(grupo);
         wrapper.appendChild(btnToggleMobile);
@@ -341,7 +340,7 @@ function crearTareaEnDOM(tareaObj, animacion = true) {
     const lista = grupo.querySelector(".lista");
     const { color, borde } = PRIORIDAD_COLORES[prioridad];
     const item = document.createElement("li");
-    item.className = `flex flex-col bg-white/10 dark:bg-black/10 sm:p-4 p-3 rounded-lg backdrop-blur-md hover:bg-white/20 dark:hover:bg-black/20 transition`;
+    item.className = `flex flex-col bg-white/10 dark:bg-black/10 p-3 rounded-lg backdrop-blur-md hover:bg-white/20 dark:hover:bg-black/20 transition`;
     item.dataset.id = id;
     item.dataset.tipo = tipo;
     item.dataset.tarea = tarea;
