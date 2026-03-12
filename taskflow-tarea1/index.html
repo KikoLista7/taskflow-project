@@ -44,8 +44,8 @@ TaskFlow ✨
 </a>
 
 <div class="flex items-center gap-2 sm:gap-3 w-full sm:w-48 md:w-auto" aria-label="Progreso de tareas">
-<div class="w-full sm:w-32 bg-white/20 dark:bg-black/20 rounded-full h-2 sm:h-3 overflow-hidden shadow-inner border border-white/10" role="progressbar" aria-label="Progreso completado" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-<div id="barraProgreso" class="h-2 sm:h-3 rounded-full transition-all duration-500 shadow-lg" style="width:0%; background:linear-gradient(90deg, #a855f7, #ec4899)"></div>
+<div class="w-full sm:w-32 bg-white/20 dark:bg-black/20 rounded-full h-4 sm:h-5 overflow-hidden shadow-inner border border-white/10" role="progressbar" aria-label="Progreso completado" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+<div id="barraProgreso" class="h-4 sm:h-5 rounded-full transition-all duration-500 shadow-lg" style="width:0%; background:linear-gradient(90deg, #a855f7, #ec4899)"></div>
 </div>
 <span id="progresoTexto" class="text-xs sm:text-sm font-medium w-10 sm:w-12 text-right whitespace-nowrap flex-shrink-0" aria-live="polite">0%</span>
 </div>
@@ -117,14 +117,14 @@ class="w-full bg-indigo-500 hover:bg-indigo-600 hover:scale-[1.03] active:scale-
 
 <div class="flex-1">
 
-<div class="px-4 sm:px-8 pt-1 pb-3 sm:pb-4">
+<div id="searchSection" class="px-4 sm:px-8 pt-0 pb-2 sm:pb-3 transition-all duration-300">
 <div class="relative max-w-md">
 <label for="buscarInput" class="sr-only">Buscar tarea</label>
 <input
 id="buscarInput"
 oninput="buscar(this.value)"
 placeholder="🔎 Buscar tarea..."
-class="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/10 backdrop-blur-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+class="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/10 backdrop-blur-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
 />
 </div>
 </div>

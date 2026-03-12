@@ -32,6 +32,11 @@ body {
 /* RESPONSIVE: Estilos que NO deben interferir con Tailwind */
 /* El HTML usa Tailwind, estos estilos son solo complementarios */
 
+/* Wrapper que mantiene grupo y botón juntos */
+.grupo-wrapper {
+  position: relative;
+}
+
 /* Contenedor de tareas de un grupo - colapsable en móvil */
 .grupo-tasks-container {
   overflow: hidden;
@@ -57,6 +62,12 @@ body {
 .btn-toggle-group-mobile {
   font-size: 0.75rem;
   padding: 0;
+}
+
+/* Sección de búsqueda - transición suave al abrir/cerrar sidebar */
+#searchSection {
+  overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.3s ease, margin-top 0.3s ease;
 }
 
 /* Ajuste del sidebar colapsable */

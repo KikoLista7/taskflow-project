@@ -244,8 +244,8 @@ function crearTareaEnDOM(tareaObj, animacion = true) {
             width: 100%;
             text-align: center;
             padding: 0.25rem 0;
-            margin-top: -2.25rem;
-            margin-bottom: 0.125rem;
+            margin-top: -1.8rem;
+            margin-bottom: 0.375rem;
             background: transparent;
             border: none;
             color: rgb(156, 163, 175);
@@ -258,7 +258,13 @@ function crearTareaEnDOM(tareaObj, animacion = true) {
             border-radius: 0.375rem;
         `;
         
-        grupo.parentNode.insertBefore(btnToggleMobile, grupo.nextSibling);
+        // Envolver grupo y botón en un contenedor para mantenerlos juntos durante drag
+        const wrapper = document.createElement("div");
+        wrapper.className = "grupo-wrapper";
+        wrapper.style.cssText = "display: contents;"; // Display contents preserva el layout
+        grupo.parentNode.insertBefore(wrapper, grupo);
+        wrapper.appendChild(grupo);
+        wrapper.appendChild(btnToggleMobile);
         
         const tasksContainer = grupo.querySelector(".grupo-tasks-container");
         
@@ -856,11 +862,24 @@ function guardarTareas(){
  * Guarda el orden actual de grupos y tareas en localStorage.
  * Utiliza el orden visual del DOM como fuente de verdad para drag-and-drop.
  * Se invoca al finalizar operaciones de arrastre y al cambiar el orden de tareas.
+ * También repara las relaciones del DOM para asegurar que los botones toggle estén con sus grupos.
  * @returns {void}
  */
 function guardarOrden(){
-  const grupos = Array.from(document.querySelectorAll("[id^='grupo-']"))
-  ordenGrupos = grupos.map(g => {
+  // Reparar relaciones grupo-botón después de drag
+  const grupos = Array.from(document.querySelectorAll("[id^='grupo-']"));
+  grupos.forEach(grupo => {
+    const wrapper = grupo.closest(".grupo-wrapper");
+    if (wrapper) {
+      const btnToggle = wrapper.querySelector(".btn-toggle-group-mobile");
+      if (btnToggle && btnToggle.nextElementSibling !== null && btnToggle.previousElementSibling !== grupo) {
+        // El botón no está en la posición correcta, moverlo
+        wrapper.appendChild(btnToggle);
+      }
+    }
+  });
+  
+  const ordenGruposActual = grupos.map(g => {
     const tipo = g.dataset.tipo
     const lista = Array.from(g.querySelectorAll("li"))
     const tareasOrden = lista.map(li => ({
@@ -870,6 +889,7 @@ function guardarOrden(){
     }))
     return {tipo, tareasOrden}
   })
+  ordenGrupos = ordenGruposActual;
   localStorage.setItem("ordenGrupos", JSON.stringify(ordenGrupos))
 }
 
@@ -1299,6 +1319,7 @@ function inicializarTareas() {
 
 /**
  * Inicializa la funcionalidad drag-and-drop del contenedor principal de tareas.
+ * También repara las relaciones del DOM después de cada movimiento.
  * @returns {void}
  */
 function inicializarDragAndDrop() {
@@ -1307,7 +1328,23 @@ function inicializarDragAndDrop() {
     ghostClass: "opacity-50",
     handle: ".handle",
     swapThreshold: 0.65,
-    onEnd: guardarOrden
+    onEnd: () => {
+      guardarOrden();
+      // Reparar posiciones de botones después del drag
+      setTimeout(() => {
+        const grupos = document.querySelectorAll("[id^='grupo-']");
+        grupos.forEach(grupo => {
+          const wrapper = grupo.closest(".grupo-wrapper");
+          if (wrapper) {
+            const btnToggle = wrapper.querySelector(".btn-toggle-group-mobile");
+            if (btnToggle) {
+              // Asegurar que el botón está último en el wrapper
+              wrapper.appendChild(btnToggle);
+            }
+          }
+        });
+      }, 50);
+    }
   });
   
   sortableInstances['taskContainer'] = mainSortable;
@@ -1316,6 +1353,7 @@ function inicializarDragAndDrop() {
 /**
  * Inicializa el toggle colapsable del sidebar en dispositivos móviles.
  * Gestiona la animación de apertura y cierre con transiciones suaves.
+ * También ajusta la visualización del buscador para dar más espacio cuando el sidebar está abierto.
  * @returns {void}
  */
 function inicializarToggleSidebar() {
@@ -1324,6 +1362,7 @@ function inicializarToggleSidebar() {
   
   const sidebarContent = document.getElementById("sidebarContent");
   const iconoToggle = document.getElementById("iconoToggle");
+  const searchSection = document.getElementById("searchSection");
   
   toggleBtn.addEventListener("click", () => {
     const isOpen = sidebarContent.style.maxHeight && sidebarContent.style.maxHeight !== "0px";
@@ -1333,11 +1372,23 @@ function inicializarToggleSidebar() {
       sidebarContent.style.maxHeight = "0px";
       sidebarContent.style.opacity = "0";
       iconoToggle.style.transform = "rotate(0deg)";
+      // Mostrar buscador normalmente
+      if (searchSection) {
+        searchSection.style.maxHeight = "none";
+        searchSection.style.opacity = "1";
+        searchSection.style.marginTop = "0";
+      }
     } else {
       // Abrir sidebar
       sidebarContent.style.maxHeight = sidebarContent.scrollHeight + "px";
       sidebarContent.style.opacity = "1";
       iconoToggle.style.transform = "rotate(180deg)";
+      // Comprimir buscador en móvil cuando abre sidebar
+      if (searchSection && window.innerWidth < 768) {
+        searchSection.style.maxHeight = "0px";
+        searchSection.style.opacity = "0";
+        searchSection.style.marginTop = "-2rem";
+      }
     }
   });
 }
@@ -1375,10 +1426,11 @@ function inicializarManejadorRedimensionamiento() {
     const grupos = document.querySelectorAll("[id^='grupo-']");
     
     grupos.forEach(grupo => {
-      const btnToggle = grupo.nextElementSibling;
+      const wrapper = grupo.closest(".grupo-wrapper");
+      const btnToggle = wrapper?.querySelector(".btn-toggle-group-mobile");
       const tasksContainer = grupo.querySelector(".grupo-tasks-container");
       
-      if (!btnToggle?.classList.contains("btn-toggle-group-mobile")) return;
+      if (!btnToggle) return;
       
       if (isMobile) {
         // En móvil: mostrar botón, mantener estado actual
