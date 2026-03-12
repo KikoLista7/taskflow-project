@@ -273,6 +273,8 @@ function crearTareaEnDOM(tareaObj, animacion = true) {
             tasksContainer.style.maxHeight = "0px";
             tasksContainer.style.opacity = "0";
             tasksContainer.style.marginTop = "0";
+            tasksContainer.style.overflow = "hidden";
+            wrapper.style.paddingBottom = "0";
             btnToggleMobile.style.transform = "scaleY(-1)";
             grupo.dataset.expanded = "false";
         } else {
@@ -280,6 +282,8 @@ function crearTareaEnDOM(tareaObj, animacion = true) {
             tasksContainer.style.maxHeight = "none";
             tasksContainer.style.opacity = "1";
             tasksContainer.style.marginTop = "1rem";
+            tasksContainer.style.overflow = "visible";
+            wrapper.style.paddingBottom = "0";
             btnToggleMobile.style.transform = "scaleY(1)";
             grupo.dataset.expanded = "true";
         }
@@ -293,7 +297,8 @@ function crearTareaEnDOM(tareaObj, animacion = true) {
                 tasksContainer.style.maxHeight = "0px";
                 tasksContainer.style.opacity = "0";
                 tasksContainer.style.marginTop = "0";
-                tasksContainer.style.marginBottom = "0";
+                tasksContainer.style.overflow = "hidden";
+                wrapper.style.paddingBottom = "0";
                 btnToggleMobile.style.transform = "scaleY(-1)";
                 grupo.dataset.expanded = "false";
             } else {
@@ -302,7 +307,8 @@ function crearTareaEnDOM(tareaObj, animacion = true) {
                 tasksContainer.style.maxHeight = scrollHeight + "px";
                 tasksContainer.style.opacity = "1";
                 tasksContainer.style.marginTop = "1rem";
-                tasksContainer.style.marginBottom = "1rem";
+                tasksContainer.style.overflow = "visible";
+                wrapper.style.paddingBottom = "1rem";
                 btnToggleMobile.style.transform = "scaleY(1)";
                 grupo.dataset.expanded = "true";
                 
