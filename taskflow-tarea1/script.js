@@ -1151,8 +1151,21 @@ function agregarSubtarea(tipo) {
       guardarTareas();
       guardarOrden();
       
+      // Restaurar el botón
       const nuevoBoton = crearBotonAgregarSubtarea(tipo);
       inputContainer.replaceWith(nuevoBoton);
+      
+      // ✅ SOLUCIÓN AL BUG: Actualizar el maxHeight del contenedor
+      const grupoContenido = grupo.querySelector(".grupo-contenido");
+      const wrapper = grupo.closest('.relative');
+      const btnToggle = wrapper?.querySelector(".btn-toggle-mobile");
+      
+      // Solo actualizar si el grupo está expandido (en móvil)
+      if (btnToggle && btnToggle.getAttribute("aria-expanded") === "true") {
+          setTimeout(() => {
+              grupoContenido.style.maxHeight = grupoContenido.scrollHeight + "px";
+          }, 50);
+      }
   };
 
   const cancelar = () => {

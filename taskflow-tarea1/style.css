@@ -120,122 +120,70 @@ main {
   transition: max-height 0.3s ease, opacity 0.3s ease;
 }
 
-/* Estilos para el colapso de grupos en móvil */
-.grupo-contenido {
-  max-height: none;
-  opacity: 1;
-  overflow: hidden;
-  transition: max-height 0.3s ease, opacity 0.3s ease;
-}
-
-/* Botón circular flotante - SOLO VISIBLE EN MÓVIL */
+/* Botón circular flotante - más pequeño y discreto */
 .btn-toggle-mobile {
-  /* Posicionamiento: siempre centrado debajo del grupo */
   position: absolute;
   left: 50%;
-  bottom: -16px; /* Ajusta la distancia desde el borde inferior del recuadro */
+  bottom: -10px;
   transform: translateX(-50%);
-  
-  /* Apariencia del círculo */
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
-  
-  /* Gradiente atractivo */
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  
-  /* Sombra pronunciada para que destaque */
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
-  
-  /* Borde sutil */
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  
-  /* Centrado del icono */
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.25);
   display: flex;
   align-items: center;
   justify-content: center;
-  
-  /* Interactividad */
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  
-  /* Z-index para que esté por encima de otros elementos */
+  transition: all 0.2s ease;
   z-index: 10;
-  
-  /* Sin padding ni margin que interfiera */
   padding: 0;
   margin: 0;
 }
 
-/* Hover del botón */
 .btn-toggle-mobile:hover {
-  transform: translateX(-50%) scale(1.15);
-  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6);
-  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  transform: translateX(-50%) scale(1.1);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+  background: rgba(255, 255, 255, 0.22);
 }
 
-/* Active (al hacer clic) */
 .btn-toggle-mobile:active {
   transform: translateX(-50%) scale(0.95);
 }
 
-/* Icono SVG dentro del botón */
 .btn-toggle-mobile .toggle-icon {
-  width: 20px;
-  height: 20px;
-  color: white;
+  width: 16px;
+  height: 16px;
+  color: rgba(255, 255, 255, 0.9);
   transition: transform 0.3s ease;
   flex-shrink: 0;
 }
 
-/* Modo oscuro - ajustes sutiles */
+/* Modo oscuro */
 .dark .btn-toggle-mobile {
-  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  background: rgba(255, 255, 255, 0.08);
   border-color: rgba(255, 255, 255, 0.15);
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.5);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
 .dark .btn-toggle-mobile:hover {
-  background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%);
-  box-shadow: 0 6px 20px rgba(79, 70, 229, 0.7);
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
 }
 
-/* Ocultar en desktop (768px o más) */
+.dark .btn-toggle-mobile .toggle-icon {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Ocultar en desktop */
 @media (min-width: 768px) {
   .btn-toggle-mobile {
     display: none !important;
   }
 }
 
-.btn-toggle-mobile:hover {
-  background: rgba(255, 255, 255, 0.18);
-  border-color: rgba(255, 255, 255, 0.4);
-  color: rgba(255, 255, 255, 0.8);
-  box-shadow: 0 0 16px rgba(255, 255, 255, 0.2);
-  transform: translateX(-50%) scale(1.1);
-}
-
-.btn-toggle-mobile:active {
-  transform: translateX(-50%) scale(0.95);
-}
-
-.btn-toggle-mobile .toggle-icon {
-  transition: transform 0.3s ease;
-}
-
-.dark .btn-toggle-mobile {
-  background: rgba(0, 0, 0, 0.12);
-  border-color: rgba(0, 0, 0, 0.25);
-  color: rgba(0, 0, 0, 0.6);
-}
-
-.dark .btn-toggle-mobile:hover {
-  background: rgba(0, 0, 0, 0.18);
-  border-color: rgba(0, 0, 0, 0.4);
-  color: rgba(0, 0, 0, 0.8);
-  box-shadow: 0 0 16px rgba(0, 0, 0, 0.2);
-}
-
+/* Responsive */
 @media (max-width: 768px) {
   main {
     flex-direction: column;
@@ -245,5 +193,10 @@ main {
     width: 100%;
     border-right: none;
     border-bottom: 1px solid #334155;
+  }
+  
+  /* Reducir espacio entre grupos en móvil para efecto de notas */
+  .relative {
+    margin-bottom: 1.25rem !important;
   }
 }
