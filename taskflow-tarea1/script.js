@@ -245,7 +245,7 @@ function crearTareaEnDOM(tareaObj, animacion = true) {
             text-align: center;
             padding: 0.25rem 0;
             margin-top: -1.2rem;
-            margin-bottom: 0.5rem;
+            margin-bottom: 1rem;
             background: transparent;
             border: none;
             color: rgb(156, 163, 175);
