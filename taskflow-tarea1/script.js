@@ -202,45 +202,47 @@ function crearTareaEnDOM(tareaObj, animacion = true) {
     let grupo = document.getElementById("grupo-" + tipo);
 
     if (!grupo) {
-        // ... (el código para crear un nuevo grupo no cambia)
         grupo = document.createElement("div");
         grupo.id = "grupo-" + tipo;
-        grupo.className = "bg-white/5 dark:bg-black/10 backdrop-blur-md p-4 rounded-xl shadow-lg relative mb-6";
+        // CAMBIO: Eliminamos 'relative' y 'mb-6' del grupo principal
+        grupo.className = "bg-white/5 dark:bg-black/10 backdrop-blur-md p-4 rounded-xl shadow-lg mb-8";
         grupo.dataset.tipo = tipo;
+        
+        // CAMBIO: Estructura simplificada - eliminamos la subcabecera innecesaria
         grupo.innerHTML = `
 <div class="flex justify-between items-center mb-4 cursor-move handle pb-2 border-b border-white/5 dark:border-black/5">
-<div class="flex items-center gap-2 cursor-move handle group flex-1 min-w-0">
-  <span class="opacity-0 group-hover:opacity-40 transition text-sm">⋮⋮</span>
-  <h2 class="text-xl font-semibold tracking-wide truncate">${tipo}</h2>
-  <button class="btn-editar ml-2 text-gray-400 hover:text-indigo-400 transition transform hover:scale-110 flex-shrink-0" title="Editar grupo">
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-    </svg>
+  <div class="flex items-center gap-2 cursor-move handle group flex-1 min-w-0">
+    <span class="opacity-0 group-hover:opacity-40 transition text-sm">⋮⋮</span>
+    <h2 class="text-xl font-semibold tracking-wide truncate">${tipo}</h2>
+    <button class="btn-editar ml-2 text-gray-400 hover:text-indigo-400 transition transform hover:scale-110 flex-shrink-0" title="Editar grupo">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+      </svg>
+    </button>
+  </div>
+  <button class="btn-eliminar text-red-400 hover:text-red-500 transition transform hover:scale-110 hover:rotate-6 flex-shrink-0">
+    🗑️
   </button>
 </div>
-<button class="btn-eliminar text-red-400 hover:text-red-500 transition transform hover:scale-110 hover:rotate-6 flex-shrink-0">
-  🗑️
-</button>
-</div>
 <div class="grupo-contenido transition-all duration-300 overflow-hidden">
-<ul class="space-y-2 lista"></ul>
-<button class="btn-agregar-subtarea mt-3 w-full bg-white/5 hover:bg-white/10 dark:bg-black/5 dark:hover:bg-black/10 border border-white/20 hover:border-indigo-400 rounded-lg py-2 text-sm transition-all flex items-center justify-center gap-1 group">
-<span class="text-lg leading-none group-hover:scale-110 transition-transform">+</span>
-<span class="leading-none">Nueva tarea</span>
-</button>
+  <ul class="space-y-2 lista"></ul>
+  <button class="btn-agregar-subtarea mt-3 w-full bg-white/5 hover:bg-white/10 dark:bg-black/5 dark:hover:bg-black/10 border border-white/20 hover:border-indigo-400 rounded-lg py-2 text-sm transition-all flex items-center justify-center gap-1 group">
+    <span class="text-lg leading-none group-hover:scale-110 transition-transform">+</span>
+    <span class="leading-none">Nueva tarea</span>
+  </button>
 </div>
 `;
         taskContainer.appendChild(grupo);
         
-        // Crear y agregar botón circular externo
+        // CAMBIO: Crear botón circular FUERA del recuadro principal
         const btnToggle = document.createElement("button");
-        btnToggle.className = "btn-toggle-mobile md:hidden";
+        btnToggle.className = "btn-toggle-mobile absolute left-1/2 -translate-x-1/2 -bottom-4 w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-110 md:hidden z-10";
         btnToggle.setAttribute("title", "Expandir/Contraer grupo");
         btnToggle.setAttribute("aria-label", "Expandir/Contraer grupo");
         btnToggle.setAttribute("aria-expanded", "true");
         
         const toggleIcon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        toggleIcon.setAttribute("class", "h-5 w-5 toggle-icon");
+        toggleIcon.setAttribute("class", "h-5 w-5 text-white transition-transform duration-300");
         toggleIcon.setAttribute("fill", "none");
         toggleIcon.setAttribute("viewBox", "0 0 24 24");
         toggleIcon.setAttribute("stroke", "currentColor");
@@ -249,29 +251,34 @@ function crearTareaEnDOM(tareaObj, animacion = true) {
         const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
         path.setAttribute("stroke-linecap", "round");
         path.setAttribute("stroke-linejoin", "round");
-        path.setAttribute("d", "M19 14l-7 7m0 0l-7-7m7 7V3");
+        path.setAttribute("d", "M19 9l-7 7-7-7"); // Flecha hacia abajo (chevron-down)
         
         toggleIcon.appendChild(path);
         btnToggle.appendChild(toggleIcon);
-        grupo.appendChild(btnToggle);
+        
+        // CAMBIO: Envolvemos el grupo en un contenedor relativo para posicionar el botón
+        const wrapper = document.createElement("div");
+        wrapper.className = "relative mb-6";
+        grupo.parentNode.insertBefore(wrapper, grupo);
+        wrapper.appendChild(grupo);
+        wrapper.appendChild(btnToggle);
         
         grupo.querySelector(".btn-editar").onclick = function () { editarGrupo(tipo); };
         grupo.querySelector(".btn-eliminar").onclick = function () { confirmarEliminarGrupo(tipo); };
         
-        // Manejador del botón de toggle para móvil
         const grupoContenido = grupo.querySelector(".grupo-contenido");
         
-        // Por defecto, en móvil los grupos están cerrados (hidden)
+        // Por defecto en móvil: cerrado
         if (window.innerWidth < 768) {
             grupoContenido.style.maxHeight = "0px";
             grupoContenido.style.opacity = "0";
             btnToggle.setAttribute("aria-expanded", "false");
-            toggleIcon.style.transform = "rotate(0deg)"; // Apunta hacia abajo cuando cerrado
+            toggleIcon.style.transform = "rotate(0deg)"; // Flecha hacia abajo
         } else {
             grupoContenido.style.maxHeight = "none";
             grupoContenido.style.opacity = "1";
             btnToggle.setAttribute("aria-expanded", "true");
-            toggleIcon.style.transform = "rotate(180deg)"; // Apunta hacia arriba cuando abierto
+            toggleIcon.style.transform = "rotate(180deg)"; // Flecha hacia arriba
         }
         
         btnToggle.onclick = function() {
@@ -285,7 +292,6 @@ function crearTareaEnDOM(tareaObj, animacion = true) {
                 toggleIcon.style.transform = "rotate(0deg)";
             } else {
                 // Abrir - flecha apunta arriba
-                // Esperar un frame pequeño para que se calcule el scrollHeight correctamente
                 setTimeout(() => {
                     grupoContenido.style.maxHeight = grupoContenido.scrollHeight + "px";
                 }, 0);
@@ -355,17 +361,14 @@ function crearTareaEnDOM(tareaObj, animacion = true) {
         }
     });
 
-    // --- ¡NUEVA LÓGICA DEFINITIVA! ---
     const sortableLista = sortableInstances[grupo.id];
 
-    // Al entrar al textarea, DESACTIVAMOS el drag-and-drop de toda la lista
     textarea.addEventListener("focus", function() {
         if (sortableLista) {
             sortableLista.option("disabled", true);
         }
     });
 
-    // Al salir del textarea, guardamos y REACTIVAMOS el drag-and-drop
     textarea.addEventListener("blur", function () {
         if (sortableLista) {
             sortableLista.option("disabled", false);
@@ -385,7 +388,6 @@ function crearTareaEnDOM(tareaObj, animacion = true) {
             descripcionCaja.classList.add('hidden');
         }
     });
-    // --- FIN DE LA NUEVA LÓGICA ---
 
     lista.appendChild(item);
     actualizarProgreso();
