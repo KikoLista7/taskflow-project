@@ -120,17 +120,16 @@ main {
   transition: max-height 0.3s ease, opacity 0.3s ease;
 }
 
-/* Botón circular flotante - más pequeño y discreto */
-/* Botón toggle - solo flecha, sin círculo */
+/* Botón toggle - solo flecha blanca, sin círculo */
 .btn-toggle-mobile {
   position: absolute;
   left: 50%;
-  bottom: -12px; /* Más pegado al recuadro */
+  bottom: -8px;
   transform: translateX(-50%);
-  width: 20px; /* Mucho más pequeño */
-  height: 20px;
-  border-radius: 0; /* Sin círculo */
-  background: transparent; /* Sin fondo */
+  width: 18px;
+  height: 18px;
+  border-radius: 0;
+  background: transparent;
   box-shadow: none;
   border: none;
   display: flex;
@@ -152,26 +151,27 @@ main {
 }
 
 .btn-toggle-mobile .toggle-icon {
-  width: 20px;
-  height: 20px;
-  color: rgba(255, 255, 255, 0.6); /* Blanco semi-transparente */
+  width: 18px;
+  height: 18px;
+  color: rgba(255, 255, 255, 0.5);
   transition: transform 0.3s ease, color 0.2s ease;
   flex-shrink: 0;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3)); /* Sombra sutil para que destaque */
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.4));
+  stroke-width: 2.5;
 }
 
 .btn-toggle-mobile:hover .toggle-icon {
-  color: rgba(255, 255, 255, 0.9); /* Más visible en hover */
+  color: rgba(255, 255, 255, 0.8);
 }
 
 /* Modo oscuro */
 .dark .btn-toggle-mobile .toggle-icon {
-  color: rgba(255, 255, 255, 0.5);
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
+  color: rgba(0, 0, 0, 0.4);
+  filter: drop-shadow(0 1px 2px rgba(255, 255, 255, 0.3));
 }
 
 .dark .btn-toggle-mobile:hover .toggle-icon {
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(0, 0, 0, 0.7);
 }
 
 /* Ocultar en desktop */
@@ -181,13 +181,12 @@ main {
   }
 }
 
-/* Ajuste del sidebar colapsable - siempre sin padding vertical extra */
+/* Ajuste del sidebar colapsable */
 #sidebarContent {
-  padding-top: 0.75rem !important;
-  padding-bottom: 0.75rem !important;
+  padding-top: 0.5rem !important;
+  padding-bottom: 0.5rem !important;
 }
 
-/* En desktop, mantener el padding normal */
 @media (min-width: 1024px) {
   #sidebarContent {
     padding-top: 1.25rem !important;
@@ -203,20 +202,6 @@ main {
   
   /* Reducir espacio entre grupos en móvil */
   .relative {
-    margin-bottom: 0.75rem !important; /* Espacio mínimo entre grupos */
-  }
-}
-
-/* Ajuste del sidebar colapsable - siempre sin padding vertical */
-#sidebarContent {
-  padding-top: 0.75rem !important;
-  padding-bottom: 0.75rem !important;
-}
-
-/* En desktop, mantener el padding normal */
-@media (min-width: 1024px) {
-  #sidebarContent {
-    padding-top: 1.25rem !important;
-    padding-bottom: 1.25rem !important;
+    margin-bottom: 0.5rem !important;
   }
 }

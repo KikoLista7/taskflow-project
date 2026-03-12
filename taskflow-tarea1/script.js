@@ -236,13 +236,13 @@ function crearTareaEnDOM(tareaObj, animacion = true) {
         
         // CAMBIO: Crear botón circular FUERA del recuadro principal
         const btnToggle = document.createElement("button");
-        btnToggle.className = "btn-toggle-mobile absolute left-1/2 -translate-x-1/2 -bottom-4 w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-110 md:hidden z-10";
+        btnToggle.className = "btn-toggle-mobile";
         btnToggle.setAttribute("title", "Expandir/Contraer grupo");
         btnToggle.setAttribute("aria-label", "Expandir/Contraer grupo");
         btnToggle.setAttribute("aria-expanded", "true");
         
         const toggleIcon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        toggleIcon.setAttribute("class", "h-5 w-5 text-white transition-transform duration-300");
+        toggleIcon.setAttribute("class", "toggle-icon");
         toggleIcon.setAttribute("fill", "none");
         toggleIcon.setAttribute("viewBox", "0 0 24 24");
         toggleIcon.setAttribute("stroke", "currentColor");
@@ -258,7 +258,7 @@ function crearTareaEnDOM(tareaObj, animacion = true) {
         
         // CAMBIO: Envolvemos el grupo en un contenedor relativo para posicionar el botón
         const wrapper = document.createElement("div");
-        wrapper.className = "relative mb-6";
+        wrapper.className = "relative mb-3";
         grupo.parentNode.insertBefore(wrapper, grupo);
         wrapper.appendChild(grupo);
         wrapper.appendChild(btnToggle);
