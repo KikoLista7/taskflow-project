@@ -32,70 +32,32 @@ body {
 /* RESPONSIVE: Estilos que NO deben interferir con Tailwind */
 /* El HTML usa Tailwind, estos estilos son solo complementarios */
 
-/* Estilos para el colapso de grupos en móvil */
-.grupo-contenido {
+/* Botón toggle para grupos en móvil - solo flecha pequeña */
+.btn-toggle-group-mobile {
+  font-size: 0.75rem;
+  padding: 0;
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+/* Contenedor de tareas de un grupo - colapsable en móvil */
+.grupo-tasks-container {
   max-height: none;
   opacity: 1;
-  overflow: hidden;
-  transition: max-height 0.3s ease, opacity 0.3s ease;
+  overflow: visible;
 }
 
-/* Botón toggle - solo flecha blanca, sin círculo */
-.btn-toggle-mobile {
-  position: absolute;
-  left: 50%;
-  bottom: -6px;
-  transform: translateX(-50%);
-  width: 20px;
-  height: 20px;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  z-index: 10;
-  padding: 0;
-  margin: 0;
+/* Animación suave para expand/collapse */
+@media (max-width: 767px) {
+  .grupo-tasks-container {
+    overflow: hidden;
+    transition: max-height 0.3s ease, opacity 0.3s ease, margin-top 0.3s ease;
+  }
 }
 
-.btn-toggle-mobile:hover {
-  transform: translateX(-50%) scale(1.3);
-}
-
-.btn-toggle-mobile:active {
-  transform: translateX(-50%) scale(0.9);
-}
-
-.btn-toggle-mobile svg {
-  width: 20px;
-  height: 20px;
-  color: rgba(255, 255, 255, 0.6);
-  transition: transform 0.3s ease, color 0.2s ease;
-  flex-shrink: 0;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
-}
-
-.btn-toggle-mobile:hover svg {
-  color: rgba(255, 255, 255, 0.9);
-}
-
-/* Modo oscuro */
-.dark .btn-toggle-mobile svg {
-  color: rgba(0, 0, 0, 0.5);
-  filter: drop-shadow(0 1px 3px rgba(255, 255, 255, 0.4));
-}
-
-.dark .btn-toggle-mobile:hover svg {
-  color: rgba(0, 0, 0, 0.8);
-}
-
-/* Ocultar en desktop */
-@media (min-width: 768px) {
-  .btn-toggle-mobile {
+/* En desktop: siempre visible */
+@media (min-width: 1024px) {
+  .btn-toggle-group-mobile {
     display: none !important;
   }
 }

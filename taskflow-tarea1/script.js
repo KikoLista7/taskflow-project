@@ -204,11 +204,10 @@ function crearTareaEnDOM(tareaObj, animacion = true) {
     if (!grupo) {
         grupo = document.createElement("div");
         grupo.id = "grupo-" + tipo;
-        // CAMBIO: Eliminamos 'relative' y 'mb-6' del grupo principal
         grupo.className = "bg-white/5 dark:bg-black/10 backdrop-blur-md p-4 rounded-xl shadow-lg mb-8";
         grupo.dataset.tipo = tipo;
+        grupo.dataset.expanded = "true"; // Estado de expansión (solo afecta móvil visualmente)
         
-        // CAMBIO: Estructura simplificada - eliminamos la subcabecera innecesaria
         grupo.innerHTML = `
 <div class="flex justify-between items-center mb-4 cursor-move handle pb-2 border-b border-white/5 dark:border-black/5">
   <div class="flex items-center gap-2 cursor-move handle group flex-1 min-w-0">
@@ -224,7 +223,7 @@ function crearTareaEnDOM(tareaObj, animacion = true) {
     🗑️
   </button>
 </div>
-<div class="grupo-contenido transition-all duration-300 overflow-hidden">
+<div class="grupo-tasks-container transition-all duration-300 overflow-hidden">
   <ul class="space-y-2 lista"></ul>
   <button class="btn-agregar-subtarea mt-3 w-full bg-white/5 hover:bg-white/10 dark:bg-black/5 dark:hover:bg-black/10 border border-white/20 hover:border-indigo-400 rounded-lg py-2 text-sm transition-all flex items-center justify-center gap-1 group">
     <span class="text-lg leading-none group-hover:scale-110 transition-transform">+</span>
@@ -234,72 +233,49 @@ function crearTareaEnDOM(tareaObj, animacion = true) {
 `;
         taskContainer.appendChild(grupo);
         
-        // CAMBIO: Crear botón circular FUERA del recuadro principal
-        const btnToggle = document.createElement("button");
-        btnToggle.className = "btn-toggle-mobile";
-        btnToggle.setAttribute("title", "Expandir/Contraer grupo");
-        btnToggle.setAttribute("aria-label", "Expandir/Contraer grupo");
-        btnToggle.setAttribute("aria-expanded", "true");
-        
-        const toggleIcon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        toggleIcon.setAttribute("class", "toggle-icon");
-        toggleIcon.setAttribute("fill", "none");
-        toggleIcon.setAttribute("viewBox", "0 0 24 24");
-        toggleIcon.setAttribute("stroke", "currentColor");
-        toggleIcon.setAttribute("stroke-width", "2.5");
-        
-        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        path.setAttribute("stroke-linecap", "round");
-        path.setAttribute("stroke-linejoin", "round");
-        path.setAttribute("d", "M19 9l-7 7-7-7"); // Flecha hacia abajo (chevron-down)
-        
-        toggleIcon.appendChild(path);
-        btnToggle.appendChild(toggleIcon);
-        
-        // CAMBIO: Envolvemos el grupo en un contenedor relativo para posicionar el botón
-        const wrapper = document.createElement("div");
-        wrapper.className = "relative mb-6";
-        grupo.parentNode.insertBefore(wrapper, grupo);
-        wrapper.appendChild(grupo);
-        wrapper.appendChild(btnToggle);
+        // En móvil: crear botón de toggle pequeño
+        if (window.innerWidth < 768) {
+            const btnToggleMobile = document.createElement("button");
+            btnToggleMobile.className = "btn-toggle-group-mobile hidden lg:hidden absolute -bottom-5 left-1/2 transform -translate-x-1/2 w-6 h-6 text-center text-gray-400 hover:text-white transition-colors cursor-pointer text-lg leading-none";
+            btnToggleMobile.setAttribute("type", "button");
+            btnToggleMobile.setAttribute("aria-label", `Expandir/contraer grupo ${tipo}`);
+            btnToggleMobile.innerHTML = "▼"; // Por defecto abierto
+            
+            grupo.parentNode.insertBefore(btnToggleMobile, grupo.nextSibling);
+            
+            const tasksContainer = grupo.querySelector(".grupo-tasks-container");
+            
+            btnToggleMobile.addEventListener("click", (e) => {
+                e.preventDefault();
+                const isExpanded = grupo.dataset.expanded === "true";
+                
+                if (isExpanded) {
+                    // Cerrar
+                    tasksContainer.style.maxHeight = "0px";
+                    tasksContainer.style.opacity = "0";
+                    tasksContainer.style.marginTop = "0";
+                    btnToggleMobile.innerHTML = "▶";
+                    grupo.dataset.expanded = "false";
+                } else {
+                    // Abrir
+                    tasksContainer.style.maxHeight = tasksContainer.scrollHeight + "px";
+                    tasksContainer.style.opacity = "1";
+                    tasksContainer.style.marginTop = "1rem";
+                    btnToggleMobile.innerHTML = "▼";
+                    grupo.dataset.expanded = "true";
+                }
+            });
+            
+            // Por defecto en móvil: cerrado
+            tasksContainer.style.maxHeight = "0px";
+            tasksContainer.style.opacity = "0";
+            tasksContainer.style.marginTop = "0";
+            btnToggleMobile.innerHTML = "▶";
+            grupo.dataset.expanded = "false";
+        }
         
         grupo.querySelector(".btn-editar").onclick = function () { editarGrupo(tipo); };
         grupo.querySelector(".btn-eliminar").onclick = function () { confirmarEliminarGrupo(tipo); };
-        
-        const grupoContenido = grupo.querySelector(".grupo-contenido");
-        
-        // Por defecto en móvil: cerrado
-        if (window.innerWidth < 768) {
-            grupoContenido.style.maxHeight = "0px";
-            grupoContenido.style.opacity = "0";
-            btnToggle.setAttribute("aria-expanded", "false");
-            toggleIcon.style.transform = "rotate(0deg)"; // Flecha hacia abajo
-        } else {
-            grupoContenido.style.maxHeight = "none";
-            grupoContenido.style.opacity = "1";
-            btnToggle.setAttribute("aria-expanded", "true");
-            toggleIcon.style.transform = "rotate(180deg)"; // Flecha hacia arriba
-        }
-        
-        btnToggle.onclick = function() {
-            const isExpanded = btnToggle.getAttribute("aria-expanded") === "true";
-            
-            if (isExpanded) {
-                // Cerrar - flecha apunta abajo
-                grupoContenido.style.maxHeight = "0px";
-                grupoContenido.style.opacity = "0";
-                btnToggle.setAttribute("aria-expanded", "false");
-                toggleIcon.style.transform = "rotate(0deg)";
-            } else {
-                // Abrir - flecha apunta arriba
-                setTimeout(() => {
-                    grupoContenido.style.maxHeight = grupoContenido.scrollHeight + "px";
-                }, 0);
-                grupoContenido.style.opacity = "1";
-                btnToggle.setAttribute("aria-expanded", "true");
-                toggleIcon.style.transform = "rotate(180deg)";
-            }
-        };
         
         const btnAgregar = grupo.querySelector(".btn-agregar-subtarea");
         btnAgregar.setAttribute("aria-label", "Añadir subtarea a " + tipo);
@@ -1155,16 +1131,17 @@ function agregarSubtarea(tipo) {
       const nuevoBoton = crearBotonAgregarSubtarea(tipo);
       inputContainer.replaceWith(nuevoBoton);
       
-      // ✅ SOLUCIÓN AL BUG: Actualizar el maxHeight del contenedor
-      const grupoContenido = grupo.querySelector(".grupo-contenido");
-      const wrapper = grupo.closest('.relative');
-      const btnToggle = wrapper?.querySelector(".btn-toggle-mobile");
-      
-      // Solo actualizar si el grupo está expandido (en móvil)
-      if (btnToggle && btnToggle.getAttribute("aria-expanded") === "true") {
-          setTimeout(() => {
-              grupoContenido.style.maxHeight = grupoContenido.scrollHeight + "px";
-          }, 50);
+      // Actualizar maxHeight si está en móvil y el grupo está expandido
+      const isMobile = window.innerWidth < 768;
+      if (isMobile) {
+          const tasksContainer = grupo.querySelector(".grupo-tasks-container");
+          const btnToggle = grupo.nextElementSibling;
+          
+          if (btnToggle?.classList.contains("btn-toggle-group-mobile") && grupo.dataset.expanded === "true") {
+              setTimeout(() => {
+                  tasksContainer.style.maxHeight = tasksContainer.scrollHeight + "px";
+              }, 50);
+          }
       }
   };
 
@@ -1331,27 +1308,23 @@ function inicializarManejadorRedimensionamiento() {
     const grupos = document.querySelectorAll("[id^='grupo-']");
     
     grupos.forEach(grupo => {
-      const wrapper = grupo.closest('.relative');
-      if (!wrapper) return;
+      const btnToggle = grupo.nextElementSibling;
+      const tasksContainer = grupo.querySelector(".grupo-tasks-container");
       
-      const btnToggle = wrapper.querySelector(".btn-toggle-mobile");
-      const grupoContenido = grupo.querySelector(".grupo-contenido");
-      const toggleIcon = btnToggle?.querySelector(".toggle-icon");
+      // Si no existe el botón toggle (no está en móvil), no hacer nada
+      if (!btnToggle?.classList.contains("btn-toggle-group-mobile")) return;
       
       if (!isMobile) {
         // En desktop: expandir todos los grupos automáticamente
-        grupoContenido.style.maxHeight = "none";
-        grupoContenido.style.opacity = "1";
-        if (toggleIcon) toggleIcon.style.transform = "rotate(180deg)";
-        if (btnToggle) btnToggle.setAttribute("aria-expanded", "true");
+        tasksContainer.style.maxHeight = "none";
+        tasksContainer.style.opacity = "1";
+        tasksContainer.style.marginTop = "1rem";
+        btnToggle.innerHTML = "▼";
+        grupo.dataset.expanded = "true";
+        btnToggle.style.display = "none";
       } else {
-        // En móvil: mantener el estado actual del grupo
-        const isExpanded = btnToggle?.getAttribute("aria-expanded") === "true";
-        if (!isExpanded) {
-          grupoContenido.style.maxHeight = "0px";
-          grupoContenido.style.opacity = "0";
-          if (toggleIcon) toggleIcon.style.transform = "rotate(0deg)";
-        }
+        // En móvil: mostrar botón y mantener estado actual
+        btnToggle.style.display = "block";
       }
     });
   });
