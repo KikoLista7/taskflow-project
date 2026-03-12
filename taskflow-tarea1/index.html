@@ -37,14 +37,14 @@ TaskFlow ✨
 
 <div class="flex items-center gap-2 sm:gap-4">
 
-<a href="login.html" class="w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-white/40 dark:border-black/40 bg-white/10 dark:bg-black/10 flex items-center justify-center hover:bg-white/20 dark:hover:bg-black/20 transition-all shadow-sm" aria-label="Acceder a tu perfil">
+<a href="login.html" class="w-10 h-10 rounded-full border border-white/40 dark:border-black/40 bg-white/10 dark:bg-black/10 flex items-center justify-center hover:bg-white/20 dark:hover:bg-black/20 transition-all shadow-sm" aria-label="Acceder a tu perfil">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-4 h-4 sm:w-5 sm:h-5 text-white dark:text-black">
 <path fill="currentColor" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4Zm0 2c-3.33 0-6 1.34-6 3v1c0 .55.45 1 1 1h10c.55 0 1-.45 1-1v-1c0-1.66-2.67-3-6-3Z"/>
 </svg>
 </a>
 
-<div class="flex items-center gap-2 sm:gap-3 w-40 sm:w-48 md:w-auto" aria-label="Progreso de tareas">
-<div class="w-40 sm:w-32 bg-white/20 dark:bg-black/20 rounded-full h-5 sm:h-5 overflow-hidden shadow-inner border border-white/10" role="progressbar" aria-label="Progreso completado" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+<div class="flex items-center gap-2 sm:gap-3 w-48 sm:w-48 md:w-auto" aria-label="Progreso de tareas">
+<div class="w-48 sm:w-32 bg-white/20 dark:bg-black/20 rounded-full h-5 sm:h-5 overflow-hidden shadow-inner border border-white/10" role="progressbar" aria-label="Progreso completado" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
 <div id="barraProgreso" class="h-5 sm:h-5 rounded-full transition-all duration-500 shadow-lg" style="width:0%; background:linear-gradient(90deg, #a855f7, #ec4899)"></div>
 </div>
 <span id="progresoTexto" class="text-xs sm:text-sm font-medium w-10 sm:w-12 text-right whitespace-nowrap flex-shrink-0" aria-live="polite">0%</span>
@@ -117,7 +117,7 @@ class="w-full bg-indigo-500 hover:bg-indigo-600 hover:scale-[1.03] active:scale-
 
 <div class="flex-1">
 
-<div id="searchSection" class="px-4 sm:px-8 pt-0 pb-4 sm:pb-5 transition-all duration-300">
+<div id="searchSection" class="px-4 sm:px-8 pt-0 pb-4 sm:pb-3 transition-all duration-300">
 <div class="relative max-w-md">
 <label for="buscarInput" class="sr-only">Buscar tarea</label>
 <input
@@ -129,7 +129,7 @@ class="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/10 backdrop-b
 </div>
 </div>
 
-<section id="taskContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 px-4 sm:px-8 pb-4 sm:pb-8 max-w-7xl mx-auto mt-3 sm:mt-4" aria-label="Listado de tareas">
+<section id="taskContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 px-4 sm:px-8 pb-4 sm:pb-8 max-w-7xl mx-auto mt-3 sm:mt-0" aria-label="Listado de tareas">
 </section>
 
 <div id="mensajeVacio" class="hidden text-center text-gray-400 dark:text-gray-600 italic mt-4 text-lg px-4 sm:px-8" aria-live="polite">
