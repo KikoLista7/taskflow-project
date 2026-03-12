@@ -1310,15 +1310,11 @@ function inicializarToggleSidebar() {
       // Cerrar sidebar
       sidebarContent.style.maxHeight = "0px";
       sidebarContent.style.opacity = "0";
-      sidebarContent.style.paddingTop = "0";
-      sidebarContent.style.paddingBottom = "0";
       iconoToggle.style.transform = "rotate(0deg)";
     } else {
       // Abrir sidebar
       sidebarContent.style.maxHeight = sidebarContent.scrollHeight + "px";
       sidebarContent.style.opacity = "1";
-      sidebarContent.style.paddingTop = "1.25rem";
-      sidebarContent.style.paddingBottom = "1.25rem";
       iconoToggle.style.transform = "rotate(180deg)";
     }
   });
