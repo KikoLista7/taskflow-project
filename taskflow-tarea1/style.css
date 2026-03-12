@@ -120,24 +120,91 @@ main {
   transition: max-height 0.3s ease, opacity 0.3s ease;
 }
 
+/* Estilos para el colapso de grupos en móvil */
+.grupo-contenido {
+  max-height: none;
+  opacity: 1;
+  overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+}
+
+/* Botón circular flotante - SOLO VISIBLE EN MÓVIL */
 .btn-toggle-mobile {
+  /* Posicionamiento: siempre centrado debajo del grupo */
   position: absolute;
-  bottom: -20px;
   left: 50%;
+  bottom: -16px; /* Ajusta la distancia desde el borde inferior del recuadro */
   transform: translateX(-50%);
-  width: 40px;
-  height: 40px;
-  padding: 0;
+  
+  /* Apariencia del círculo */
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1.5px solid rgba(255, 255, 255, 0.25);
-  cursor: pointer;
-  display: inline-flex;
+  
+  /* Gradiente atractivo */
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  
+  /* Sombra pronunciada para que destaque */
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+  
+  /* Borde sutil */
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  
+  /* Centrado del icono */
+  display: flex;
   align-items: center;
   justify-content: center;
-  line-height: 1;
-  transition: all 0.2s ease;
-  color: rgba(255, 255, 255, 0.6);
+  
+  /* Interactividad */
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* Z-index para que esté por encima de otros elementos */
+  z-index: 10;
+  
+  /* Sin padding ni margin que interfiera */
+  padding: 0;
+  margin: 0;
+}
+
+/* Hover del botón */
+.btn-toggle-mobile:hover {
+  transform: translateX(-50%) scale(1.15);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6);
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+}
+
+/* Active (al hacer clic) */
+.btn-toggle-mobile:active {
+  transform: translateX(-50%) scale(0.95);
+}
+
+/* Icono SVG dentro del botón */
+.btn-toggle-mobile .toggle-icon {
+  width: 20px;
+  height: 20px;
+  color: white;
+  transition: transform 0.3s ease;
+  flex-shrink: 0;
+}
+
+/* Modo oscuro - ajustes sutiles */
+.dark .btn-toggle-mobile {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.5);
+}
+
+.dark .btn-toggle-mobile:hover {
+  background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%);
+  box-shadow: 0 6px 20px rgba(79, 70, 229, 0.7);
+}
+
+/* Ocultar en desktop (768px o más) */
+@media (min-width: 768px) {
+  .btn-toggle-mobile {
+    display: none !important;
+  }
 }
 
 .btn-toggle-mobile:hover {

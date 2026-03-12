@@ -1320,16 +1320,27 @@ function inicializarManejadorRedimensionamiento() {
     const grupos = document.querySelectorAll("[id^='grupo-']");
     
     grupos.forEach(grupo => {
-      const btnToggle = grupo.querySelector(".btn-toggle-mobile");
+      const wrapper = grupo.closest('.relative');
+      if (!wrapper) return;
+      
+      const btnToggle = wrapper.querySelector(".btn-toggle-mobile");
       const grupoContenido = grupo.querySelector(".grupo-contenido");
-      const toggleIcon = btnToggle.querySelector(".toggle-icon");
+      const toggleIcon = btnToggle?.querySelector(".toggle-icon");
       
       if (!isMobile) {
-        // En desktop, expandir automáticamente todos los grupos
+        // En desktop: expandir todos los grupos automáticamente
         grupoContenido.style.maxHeight = "none";
         grupoContenido.style.opacity = "1";
-        toggleIcon.style.transform = "rotate(180deg)"; // Flecha hacia arriba en desktop
-        btnToggle.setAttribute("aria-expanded", "true");
+        if (toggleIcon) toggleIcon.style.transform = "rotate(180deg)";
+        if (btnToggle) btnToggle.setAttribute("aria-expanded", "true");
+      } else {
+        // En móvil: mantener el estado actual del grupo
+        const isExpanded = btnToggle?.getAttribute("aria-expanded") === "true";
+        if (!isExpanded) {
+          grupoContenido.style.maxHeight = "0px";
+          grupoContenido.style.opacity = "0";
+          if (toggleIcon) toggleIcon.style.transform = "rotate(0deg)";
+        }
       }
     });
   });
