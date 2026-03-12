@@ -205,7 +205,7 @@ function crearTareaEnDOM(tareaObj, animacion = true) {
         // ... (el código para crear un nuevo grupo no cambia)
         grupo = document.createElement("div");
         grupo.id = "grupo-" + tipo;
-        grupo.className = "bg-white/5 dark:bg-black/10 backdrop-blur-md p-4 rounded-xl shadow-lg relative";
+        grupo.className = "bg-white/5 dark:bg-black/10 backdrop-blur-md p-4 rounded-xl shadow-lg relative pt-4";
         grupo.dataset.tipo = tipo;
         grupo.innerHTML = `
 <div class="flex justify-between items-center mb-4 cursor-move handle">
@@ -218,16 +218,16 @@ function crearTareaEnDOM(tareaObj, animacion = true) {
     </svg>
   </button>
 </div>
-<button class="btn-toggle-mobile md:hidden absolute -bottom-3 left-1/2 transform -translate-x-1/2 text-gray-400 hover:text-gray-300 transition-transform duration-300" title="Expandir/Contraer grupo" aria-label="Expandir/Contraer grupo" aria-expanded="true">
-  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 toggle-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-    <path stroke-linecap="round" stroke-linejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-  </svg>
-</button>
 <button class="btn-eliminar text-red-400 hover:text-red-500 transition transform hover:scale-110 hover:rotate-6 flex-shrink-0">
   🗑️
 </button>
 </div>
-<div class="grupo-contenido transition-all duration-300 overflow-hidden">
+<button class="btn-toggle-mobile md:hidden absolute left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200 transition-all duration-300" style="top: calc(100% - 1rem);" title="Expandir/Contraer grupo" aria-label="Expandir/Contraer grupo" aria-expanded="true">
+  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 toggle-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+  </svg>
+</button>
+<div class="grupo-contenido transition-all duration-300 overflow-hidden pt-2">
 <ul class="space-y-2 lista"></ul>
 <button class="btn-agregar-subtarea mt-3 w-full bg-white/5 hover:bg-white/10 dark:bg-black/5 dark:hover:bg-black/10 border border-white/20 hover:border-indigo-400 rounded-lg py-2 text-sm transition-all flex items-center justify-center gap-1 group">
 <span class="text-lg leading-none group-hover:scale-110 transition-transform">+</span>
