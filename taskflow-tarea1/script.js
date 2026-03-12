@@ -238,14 +238,14 @@ function crearTareaEnDOM(tareaObj, animacion = true) {
         btnToggleMobile.className = "btn-toggle-group-mobile";
         btnToggleMobile.setAttribute("type", "button");
         btnToggleMobile.setAttribute("aria-label", `Expandir/contraer grupo ${tipo}`);
-        btnToggleMobile.innerHTML = "v";
+        btnToggleMobile.innerHTML = "^";
         btnToggleMobile.style.cssText = `
             display: none;
             width: 100%;
             text-align: center;
             padding: 0.25rem 0;
-            margin-top: -0.75rem;
-            margin-bottom: 0.5rem;
+            margin-top: -1.5rem;
+            margin-bottom: 0.25rem;
             background: transparent;
             border: none;
             color: rgb(156, 163, 175);
@@ -254,7 +254,7 @@ function crearTareaEnDOM(tareaObj, animacion = true) {
             font-weight: 300;
             font-family: monospace;
             letter-spacing: 0.05em;
-            transition: color 0.2s ease, background-color 0.2s ease;
+            transition: color 0.2s ease, background-color 0.2s ease, transform 0.3s ease;
             border-radius: 0.375rem;
         `;
         
@@ -268,12 +268,14 @@ function crearTareaEnDOM(tareaObj, animacion = true) {
             tasksContainer.style.maxHeight = "0px";
             tasksContainer.style.opacity = "0";
             tasksContainer.style.marginTop = "0";
+            btnToggleMobile.style.transform = "scaleY(-1)";
             grupo.dataset.expanded = "false";
         } else {
             // En desktop: siempre visible
             tasksContainer.style.maxHeight = "none";
             tasksContainer.style.opacity = "1";
             tasksContainer.style.marginTop = "1rem";
+            btnToggleMobile.style.transform = "scaleY(1)";
             grupo.dataset.expanded = "true";
         }
         
@@ -286,16 +288,19 @@ function crearTareaEnDOM(tareaObj, animacion = true) {
                 tasksContainer.style.maxHeight = "0px";
                 tasksContainer.style.opacity = "0";
                 tasksContainer.style.marginTop = "0";
-                btnToggleMobile.innerHTML = "v";
+                btnToggleMobile.style.transform = "scaleY(-1)";
                 grupo.dataset.expanded = "false";
             } else {
                 // Abrir
                 tasksContainer.style.maxHeight = tasksContainer.scrollHeight + "px";
                 tasksContainer.style.opacity = "1";
                 tasksContainer.style.marginTop = "1rem";
-                btnToggleMobile.innerHTML = "^";
+                btnToggleMobile.style.transform = "scaleY(1)";
                 grupo.dataset.expanded = "true";
             }
+            
+            // Recalcular maxHeight de todos los grupos expandidos después de la transición
+            setTimeout(recalcularMaxHeights, 350);
         });
         
         btnToggleMobile.addEventListener("mouseover", () => {
@@ -710,6 +715,7 @@ function eliminarTarea(tipo, tarea, item){
   actualizarProgreso();
   cerrarModal();
   mostrarMensajeVacio();
+  recalcularMaxHeights();
 }
 
 /**
@@ -727,6 +733,7 @@ function eliminarGrupo(tipo){
   actualizarProgreso();
   cerrarModal();
   mostrarMensajeVacio();
+  recalcularMaxHeights();
 }
 
 /**
@@ -1022,6 +1029,7 @@ function completarTarea(checkbox){
   }
 
   actualizarProgreso();
+  recalcularMaxHeights();
 }
 
 /**
@@ -1165,19 +1173,8 @@ function agregarSubtarea(tipo) {
       const nuevoBoton = crearBotonAgregarSubtarea(tipo);
       inputContainer.replaceWith(nuevoBoton);
       
-      // Actualizar maxHeight si está en móvil y el grupo está expandido
-      const isMobile = window.innerWidth < 768;
-      if (isMobile) {
-          const grupoElement = document.getElementById("grupo-" + tipo);
-          const tasksContainer = grupoElement?.querySelector(".grupo-tasks-container");
-          const btnToggle = grupoElement?.nextElementSibling;
-          
-          if (btnToggle?.classList.contains("btn-toggle-group-mobile") && grupoElement?.dataset.expanded === "true") {
-              setTimeout(() => {
-                  tasksContainer.style.maxHeight = tasksContainer.scrollHeight + "px";
-              }, 50);
-          }
-      }
+      // Recalcular maxHeight de todos los grupos expandidos
+      recalcularMaxHeights();
   };
 
   const cancelar = () => {
@@ -1257,6 +1254,8 @@ function cambiarPrioridad(item, badge) {
       guardarTareas();
       guardarOrden();
   }
+  
+  recalcularMaxHeights();
 }
 
 /**
@@ -1333,6 +1332,25 @@ function inicializarToggleSidebar() {
 }
 
 /**
+ * Recalcula el maxHeight de todos los grupos expandidos en móvil.
+ * Útil cuando el contenido cambia dinámicamente (agregar/eliminar tareas).
+ * @returns {void}
+ */
+function recalcularMaxHeights() {
+  if (window.innerWidth >= 768) return; // Solo en móvil
+  
+  const grupos = document.querySelectorAll("[id^='grupo-']");
+  grupos.forEach(grupo => {
+    if (grupo.dataset.expanded === "true") {
+      const tasksContainer = grupo.querySelector(".grupo-tasks-container");
+      if (tasksContainer) {
+        tasksContainer.style.maxHeight = tasksContainer.scrollHeight + "px";
+      }
+    }
+  });
+}
+
+/**
  * Punto de entrada principal de la aplicación.
  * Inicializa todos los componentes: modo oscuro, tareas, drag-and-drop, y UI interactiva.
  * @returns {void}
@@ -1357,6 +1375,7 @@ function inicializarManejadorRedimensionamiento() {
         tasksContainer.style.maxHeight = "none";
         tasksContainer.style.opacity = "1";
         tasksContainer.style.marginTop = "1rem";
+        btnToggle.style.transform = "scaleY(1)";
         grupo.dataset.expanded = "true";
       }
     });
