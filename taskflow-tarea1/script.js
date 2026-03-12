@@ -341,7 +341,7 @@ function crearTareaEnDOM(tareaObj, animacion = true) {
     const lista = grupo.querySelector(".lista");
     const { color, borde } = PRIORIDAD_COLORES[prioridad];
     const item = document.createElement("li");
-    item.className = `flex flex-col bg-white/10 dark:bg-black/10 p-3 rounded-lg backdrop-blur-md hover:bg-white/20 dark:hover:bg-black/20 transition`;
+    item.className = `flex flex-col bg-white/10 dark:bg-black/10 sm:p-4 p-3 rounded-lg backdrop-blur-md hover:bg-white/20 dark:hover:bg-black/20 transition`;
     item.dataset.id = id;
     item.dataset.tipo = tipo;
     item.dataset.tarea = tarea;
@@ -1138,7 +1138,7 @@ function agregarSubtarea(tipo) {
   const botonAgregar = grupo.querySelector(".btn-agregar-subtarea");
 
   const inputContainer = document.createElement("div");
-  inputContainer.className = "mt-2 flex gap-2";
+  inputContainer.className = "mt-2 flex gap-2 overflow-visible";
   inputContainer.innerHTML = `
 <input type="text" placeholder="Nueva tarea..." class="flex-1 px-3 py-2 rounded-lg bg-white/10 border border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
 <button class="btn-guardar-subtarea bg-indigo-500 hover:bg-indigo-600 px-3 rounded-lg transition">✓</button>

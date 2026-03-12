@@ -47,13 +47,23 @@ body {
   }
 }
 
-/* En desktop: siempre visible sin transiciones */
+/* En desktop: siempre visible sin transiciones Y permitir overflow para efectos */
 @media (min-width: 768px) {
   .grupo-tasks-container {
     max-height: none !important;
     opacity: 1 !important;
     overflow: visible !important;
     will-change: auto;
+  }
+  
+  /* Asegurar que la lista y items permiten efectos sin cortarse */
+  .lista {
+    overflow: visible !important;
+  }
+  
+  .lista li {
+    overflow: visible !important;
+    padding: 1rem !important; /* Asegurar suficiente espacio para ring */
   }
 }
 
@@ -105,6 +115,9 @@ body {
 }
 
 /* Tablets y superiores */
-@media (min-width: 1024px) {
-  /* Estos estilos solo se aplican en lg+ */
+@media (min-width: 768px) {
+  /* Permitir que efectos como heartbeat se expandan sin cortarse */
+  .lista li {
+    overflow: visible !important;
+  }
 }
