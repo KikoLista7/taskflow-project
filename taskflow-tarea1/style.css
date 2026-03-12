@@ -112,6 +112,34 @@ main {
   background: var(--color-low);
 }
 
+/* Estilos para el colapso de grupos en móvil */
+.grupo-contenido {
+  max-height: none;
+  opacity: 1;
+  overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+}
+
+.btn-toggle-mobile {
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-toggle-mobile:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.btn-toggle-mobile .toggle-icon {
+  transition: transform 0.3s ease;
+}
+
 @media (max-width: 768px) {
   main {
     flex-direction: column;

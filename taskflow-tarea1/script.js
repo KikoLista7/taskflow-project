@@ -209,28 +209,70 @@ function crearTareaEnDOM(tareaObj, animacion = true) {
         grupo.dataset.tipo = tipo;
         grupo.innerHTML = `
 <div class="flex justify-between items-center mb-2 cursor-move handle">
-<div class="flex items-center gap-2 cursor-move handle group">
+<div class="flex items-center gap-2 cursor-move handle group flex-1 min-w-0">
   <span class="opacity-0 group-hover:opacity-40 transition text-sm">⋮⋮</span>
-  <h2 class="text-xl font-semibold tracking-wide">${tipo}</h2>
-  <button class="btn-editar ml-2 text-gray-400 hover:text-indigo-400 transition transform hover:scale-110" title="Editar grupo">
+  <h2 class="text-xl font-semibold tracking-wide truncate">${tipo}</h2>
+  <button class="btn-editar ml-2 text-gray-400 hover:text-indigo-400 transition transform hover:scale-110 flex-shrink-0" title="Editar grupo">
     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
     </svg>
   </button>
 </div>
-<button class="btn-eliminar text-red-400 hover:text-red-500 transition transform hover:scale-110 hover:rotate-6">
+<button class="btn-toggle-mobile md:hidden text-gray-400 hover:text-white transition-transform duration-300 transform flex-shrink-0" title="Expandir/Contraer grupo" aria-label="Expandir/Contraer grupo" aria-expanded="true">
+  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 toggle-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+  </svg>
+</button>
+<button class="btn-eliminar text-red-400 hover:text-red-500 transition transform hover:scale-110 hover:rotate-6 flex-shrink-0">
   🗑️
 </button>
 </div>
+<div class="grupo-contenido transition-all duration-300 overflow-hidden">
 <ul class="space-y-2 lista"></ul>
 <button class="btn-agregar-subtarea mt-3 w-full bg-white/5 hover:bg-white/10 dark:bg-black/5 dark:hover:bg-black/10 border border-white/20 hover:border-indigo-400 rounded-lg py-2 text-sm transition-all flex items-center justify-center gap-1 group">
 <span class="text-lg leading-none group-hover:scale-110 transition-transform">+</span>
 <span class="leading-none">Nueva tarea</span>
 </button>
+</div>
 `;
         taskContainer.appendChild(grupo);
         grupo.querySelector(".btn-editar").onclick = function () { editarGrupo(tipo); };
         grupo.querySelector(".btn-eliminar").onclick = function () { confirmarEliminarGrupo(tipo); };
+        
+        // Manejador del botón de toggle para móvil
+        const btnToggle = grupo.querySelector(".btn-toggle-mobile");
+        const grupoContenido = grupo.querySelector(".grupo-contenido");
+        const toggleIcon = btnToggle.querySelector(".toggle-icon");
+        
+        // Por defecto, en móvil los grupos están cerrados (hidden)
+        if (window.innerWidth < 768) {
+            grupoContenido.style.maxHeight = "0px";
+            grupoContenido.style.opacity = "0";
+            btnToggle.setAttribute("aria-expanded", "false");
+            toggleIcon.style.transform = "rotate(180deg)";
+        } else {
+            grupoContenido.style.maxHeight = "none";
+            grupoContenido.style.opacity = "1";
+        }
+        
+        btnToggle.onclick = function() {
+            const isExpanded = btnToggle.getAttribute("aria-expanded") === "true";
+            
+            if (isExpanded) {
+                // Cerrar
+                grupoContenido.style.maxHeight = "0px";
+                grupoContenido.style.opacity = "0";
+                btnToggle.setAttribute("aria-expanded", "false");
+                toggleIcon.style.transform = "rotate(180deg)";
+            } else {
+                // Abrir
+                grupoContenido.style.maxHeight = grupoContenido.scrollHeight + "px";
+                grupoContenido.style.opacity = "1";
+                btnToggle.setAttribute("aria-expanded", "true");
+                toggleIcon.style.transform = "rotate(0deg)";
+            }
+        };
+        
         const btnAgregar = grupo.querySelector(".btn-agregar-subtarea");
         btnAgregar.setAttribute("aria-label", "Añadir subtarea a " + tipo);
         btnAgregar.onclick = function () { agregarSubtarea(tipo); };
@@ -1250,9 +1292,31 @@ function inicializarToggleSidebar() {
  * Inicializa todos los componentes: modo oscuro, tareas, drag-and-drop, y UI interactiva.
  * @returns {void}
  */
+function inicializarManejadorRedimensionamiento() {
+  window.addEventListener("resize", () => {
+    const isMobile = window.innerWidth < 768;
+    const grupos = document.querySelectorAll("[id^='grupo-']");
+    
+    grupos.forEach(grupo => {
+      const btnToggle = grupo.querySelector(".btn-toggle-mobile");
+      const grupoContenido = grupo.querySelector(".grupo-contenido");
+      const toggleIcon = btnToggle.querySelector(".toggle-icon");
+      
+      if (!isMobile) {
+        // En desktop, expandir automáticamente todos los grupos
+        grupoContenido.style.maxHeight = "none";
+        grupoContenido.style.opacity = "1";
+        toggleIcon.style.transform = "rotate(0deg)";
+        btnToggle.setAttribute("aria-expanded", "true");
+      }
+    });
+  });
+}
+
 window.onload = function() {
   inicializarModo();
   inicializarTareas();
   inicializarDragAndDrop();
   inicializarToggleSidebar();
+  inicializarManejadorRedimensionamiento();
 };
