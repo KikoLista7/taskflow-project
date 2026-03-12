@@ -240,6 +240,9 @@ function crearTareaEnDOM(tareaObj, animacion = true) {
         btnToggle.setAttribute("title", "Expandir/Contraer grupo");
         btnToggle.setAttribute("aria-label", "Expandir/Contraer grupo");
         btnToggle.setAttribute("aria-expanded", "true");
+        btnToggle.setAttribute("title", "Expandir/Contraer grupo");
+        btnToggle.setAttribute("aria-label", "Expandir/Contraer grupo");
+        btnToggle.setAttribute("aria-expanded", "true");
         
         const toggleIcon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         toggleIcon.setAttribute("class", "toggle-icon");
@@ -258,7 +261,7 @@ function crearTareaEnDOM(tareaObj, animacion = true) {
         
         // CAMBIO: Envolvemos el grupo en un contenedor relativo para posicionar el botón
         const wrapper = document.createElement("div");
-        wrapper.className = "relative mb-3";
+        wrapper.className = "relative mb-2";
         grupo.parentNode.insertBefore(wrapper, grupo);
         wrapper.appendChild(grupo);
         wrapper.appendChild(btnToggle);
