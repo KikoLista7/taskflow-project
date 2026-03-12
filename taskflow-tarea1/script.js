@@ -204,7 +204,7 @@ function crearTareaEnDOM(tareaObj, animacion = true) {
     if (!grupo) {
         grupo = document.createElement("div");
         grupo.id = "grupo-" + tipo;
-        grupo.className = "bg-white/5 dark:bg-black/10 backdrop-blur-md p-4 rounded-xl shadow-lg mb-8";
+        grupo.className = "bg-white/5 dark:bg-black/10 backdrop-blur-md p-4 rounded-xl shadow-lg mb-2";
         grupo.dataset.tipo = tipo;
         grupo.dataset.expanded = "true"; // Estado de expansión (solo afecta móvil visualmente)
         
@@ -244,8 +244,8 @@ function crearTareaEnDOM(tareaObj, animacion = true) {
             width: 100%;
             text-align: center;
             padding: 0.25rem 0;
-            margin-top: -1.5rem;
-            margin-bottom: 0.25rem;
+            margin-top: -2.25rem;
+            margin-bottom: 0.125rem;
             background: transparent;
             border: none;
             color: rgb(156, 163, 175);
@@ -292,14 +292,23 @@ function crearTareaEnDOM(tareaObj, animacion = true) {
                 grupo.dataset.expanded = "false";
             } else {
                 // Abrir
-                tasksContainer.style.maxHeight = tasksContainer.scrollHeight + "px";
+                const scrollHeight = tasksContainer.scrollHeight;
+                tasksContainer.style.maxHeight = scrollHeight + "px";
                 tasksContainer.style.opacity = "1";
                 tasksContainer.style.marginTop = "1rem";
                 btnToggleMobile.style.transform = "scaleY(1)";
                 grupo.dataset.expanded = "true";
+                
+                // Recalcular después de un frame para asegurar que se mide correctamente
+                requestAnimationFrame(() => {
+                    const actualHeight = tasksContainer.scrollHeight;
+                    if (actualHeight > scrollHeight) {
+                        tasksContainer.style.maxHeight = actualHeight + "px";
+                    }
+                });
             }
             
-            // Recalcular maxHeight de todos los grupos expandidos después de la transición
+            // Recalcular todos los grupos después de la transición
             setTimeout(recalcularMaxHeights, 350);
         });
         
@@ -1173,8 +1182,10 @@ function agregarSubtarea(tipo) {
       const nuevoBoton = crearBotonAgregarSubtarea(tipo);
       inputContainer.replaceWith(nuevoBoton);
       
-      // Recalcular maxHeight de todos los grupos expandidos
-      recalcularMaxHeights();
+      // Recalcular maxHeight después de que el DOM se actualice
+      setTimeout(() => {
+        recalcularMaxHeights();
+      }, 50);
   };
 
   const cancelar = () => {
@@ -1341,11 +1352,14 @@ function recalcularMaxHeights() {
   
   const grupos = document.querySelectorAll("[id^='grupo-']");
   grupos.forEach(grupo => {
+    const tasksContainer = grupo.querySelector(".grupo-tasks-container");
+    if (!tasksContainer) return;
+    
     if (grupo.dataset.expanded === "true") {
-      const tasksContainer = grupo.querySelector(".grupo-tasks-container");
-      if (tasksContainer) {
-        tasksContainer.style.maxHeight = tasksContainer.scrollHeight + "px";
-      }
+      // Recalcular el scrollHeight actual
+      tasksContainer.style.maxHeight = "auto";
+      const currentHeight = tasksContainer.scrollHeight;
+      tasksContainer.style.maxHeight = currentHeight + "px";
     }
   });
 }
