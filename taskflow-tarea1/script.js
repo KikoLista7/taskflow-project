@@ -238,20 +238,22 @@ function crearTareaEnDOM(tareaObj, animacion = true) {
         btnToggleMobile.className = "btn-toggle-group-mobile";
         btnToggleMobile.setAttribute("type", "button");
         btnToggleMobile.setAttribute("aria-label", `Expandir/contraer grupo ${tipo}`);
-        btnToggleMobile.innerHTML = "▶";
+        btnToggleMobile.innerHTML = "v";
         btnToggleMobile.style.cssText = `
             display: none;
             width: 100%;
             text-align: center;
-            padding: 0.5rem 0;
-            margin-top: 0.5rem;
-            margin-bottom: 1rem;
+            padding: 0.25rem 0;
+            margin-top: -0.75rem;
+            margin-bottom: 0.5rem;
             background: transparent;
             border: none;
             color: rgb(156, 163, 175);
             cursor: pointer;
-            font-size: 1rem;
-            font-weight: 500;
+            font-size: 1.25rem;
+            font-weight: 300;
+            font-family: monospace;
+            letter-spacing: 0.05em;
             transition: color 0.2s ease, background-color 0.2s ease;
             border-radius: 0.375rem;
         `;
@@ -284,14 +286,14 @@ function crearTareaEnDOM(tareaObj, animacion = true) {
                 tasksContainer.style.maxHeight = "0px";
                 tasksContainer.style.opacity = "0";
                 tasksContainer.style.marginTop = "0";
-                btnToggleMobile.innerHTML = "▶";
+                btnToggleMobile.innerHTML = "v";
                 grupo.dataset.expanded = "false";
             } else {
                 // Abrir
                 tasksContainer.style.maxHeight = tasksContainer.scrollHeight + "px";
                 tasksContainer.style.opacity = "1";
                 tasksContainer.style.marginTop = "1rem";
-                btnToggleMobile.innerHTML = "▼";
+                btnToggleMobile.innerHTML = "^";
                 grupo.dataset.expanded = "true";
             }
         });
