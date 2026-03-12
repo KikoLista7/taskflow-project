@@ -121,25 +121,29 @@ main {
 }
 
 .btn-toggle-mobile {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   padding: 0;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   line-height: 1;
-  z-index: 10;
-  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .btn-toggle-mobile:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.25);
-  box-shadow: 0 0 8px rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.15);
+  transform: scale(1.05);
+}
+
+.btn-toggle-mobile:active {
+  transform: scale(0.95);
 }
 
 .btn-toggle-mobile .toggle-icon {
@@ -147,14 +151,14 @@ main {
 }
 
 .dark .btn-toggle-mobile {
-  background: rgba(0, 0, 0, 0.08);
-  border-color: rgba(0, 0, 0, 0.15);
+  background: rgba(0, 0, 0, 0.1);
+  border-color: rgba(0, 0, 0, 0.2);
 }
 
 .dark .btn-toggle-mobile:hover {
-  background: rgba(0, 0, 0, 0.12);
-  border-color: rgba(0, 0, 0, 0.25);
-  box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+  background: rgba(0, 0, 0, 0.15);
+  border-color: rgba(0, 0, 0, 0.3);
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.15);
 }
 
 @media (max-width: 768px) {

@@ -205,10 +205,10 @@ function crearTareaEnDOM(tareaObj, animacion = true) {
         // ... (el código para crear un nuevo grupo no cambia)
         grupo = document.createElement("div");
         grupo.id = "grupo-" + tipo;
-        grupo.className = "bg-white/5 dark:bg-black/10 backdrop-blur-md p-4 rounded-xl shadow-lg relative pt-4";
+        grupo.className = "bg-white/5 dark:bg-black/10 backdrop-blur-md p-4 rounded-xl shadow-lg relative";
         grupo.dataset.tipo = tipo;
         grupo.innerHTML = `
-<div class="flex justify-between items-center mb-4 cursor-move handle">
+<div class="flex justify-between items-center mb-4 cursor-move handle pb-2 border-b border-white/5 dark:border-black/5">
 <div class="flex items-center gap-2 cursor-move handle group flex-1 min-w-0">
   <span class="opacity-0 group-hover:opacity-40 transition text-sm">⋮⋮</span>
   <h2 class="text-xl font-semibold tracking-wide truncate">${tipo}</h2>
@@ -222,12 +222,14 @@ function crearTareaEnDOM(tareaObj, animacion = true) {
   🗑️
 </button>
 </div>
-<button class="btn-toggle-mobile md:hidden absolute left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200 transition-all duration-300" style="top: calc(100% - 1rem);" title="Expandir/Contraer grupo" aria-label="Expandir/Contraer grupo" aria-expanded="true">
-  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 toggle-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-    <path stroke-linecap="round" stroke-linejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-  </svg>
-</button>
-<div class="grupo-contenido transition-all duration-300 overflow-hidden pt-2">
+<div class="relative w-full flex justify-center py-2">
+  <button class="btn-toggle-mobile md:hidden text-gray-400 hover:text-gray-200 transition-all duration-300" title="Expandir/Contraer grupo" aria-label="Expandir/Contraer grupo" aria-expanded="true">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 toggle-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+    </svg>
+  </button>
+</div>
+<div class="grupo-contenido transition-all duration-300 overflow-hidden">
 <ul class="space-y-2 lista"></ul>
 <button class="btn-agregar-subtarea mt-3 w-full bg-white/5 hover:bg-white/10 dark:bg-black/5 dark:hover:bg-black/10 border border-white/20 hover:border-indigo-400 rounded-lg py-2 text-sm transition-all flex items-center justify-center gap-1 group">
 <span class="text-lg leading-none group-hover:scale-110 transition-transform">+</span>
@@ -268,7 +270,10 @@ function crearTareaEnDOM(tareaObj, animacion = true) {
                 toggleIcon.style.transform = "rotate(0deg)";
             } else {
                 // Abrir - flecha apunta arriba
-                grupoContenido.style.maxHeight = grupoContenido.scrollHeight + "px";
+                // Esperar un frame pequeño para que se calcule el scrollHeight correctamente
+                setTimeout(() => {
+                    grupoContenido.style.maxHeight = grupoContenido.scrollHeight + "px";
+                }, 0);
                 grupoContenido.style.opacity = "1";
                 btnToggle.setAttribute("aria-expanded", "true");
                 toggleIcon.style.transform = "rotate(180deg)";
