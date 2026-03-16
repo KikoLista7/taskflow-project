@@ -40,3 +40,61 @@ Agregó type="button" a los botones que usan onclick (modoBtn, toggleSidebar, ag
 
 ## Barra de progreso sincronizada con ARIA:
 En actualizarProgreso() ahora, además de actualizar el ancho y el color de barraProgreso y el texto de progresoTexto, se actualizan aria-valuenow y aria-valuetext del contenedor con role="progressbar", de forma coherente con el porcentaje mostrado ("0% completado", "35% completado", etc.).
+
+# Instalación de un servidor MCP
+Para este proyecto se instaló el servidor MCP filesystem, que permite a la IA leer archivos del proyecto.
+
+- Paso 1
+
+En la terminal se ejecutó:
+
+npm install -g @modelcontextprotocol/server-filesystem
+
+- Paso 2
+
+Se añadió la configuración en:
+
+.cursor/mcp.json
+
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "@modelcontextprotocol/server-filesystem",
+        "./"
+      ]
+    }
+  }
+}
+
+- Paso 3
+
+Después de guardar la configuración se reinició Cursor para que detectara el servidor MCP
+
+# ¿En qué casos es útil MCP en proyectos reales?
+
+1. Análisis automático de proyectos grandes
+
+En pryectos con muchos archivos, MCP permite que la IA analice todo el repositorio automáticamente.
+
+2. Generación de documentación
+
+La IA puede leer todos los archivos y generar documentación completa del proyecto.
+
+3. Refactorización de código
+
+La IA puede modificar múltiples archivos manteniendo coherencia en todo el sistema.
+
+4. Integración con herramientas externas
+
+MCP permite conectar la IA con:
+
+ - repositorios Git
+ - APIs
+ - bases de datos
+ - sistemas de despliegue
+
+5. Asistencia avanzada en desarrollo
+
+Permite que la IA entienda todo el contexto del proyecto, lo que mejora mucha la calidad de las respuestas.
