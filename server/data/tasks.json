@@ -3,8 +3,8 @@
     "id": "1773920873943",
     "tipo": "Comida",
     "tarea": "Arroz",
-    "prioridad": "alta",
-    "completed": true,
+    "prioridad": "baja",
+    "completed": false,
     "createdAt": "2026-03-19T11:47:53.943Z",
     "descripcion": ""
   },
@@ -12,8 +12,8 @@
     "id": "1773926583168",
     "tipo": "Comida",
     "tarea": "Macarrones",
-    "prioridad": "baja",
-    "completed": true,
+    "prioridad": "alta",
+    "completed": false,
     "createdAt": "2026-03-19T13:23:03.168Z",
     "descripcion": ""
   },
@@ -22,7 +22,7 @@
     "tipo": "Ejercicio",
     "tarea": "Salir a correr 10 km",
     "prioridad": "media",
-    "completed": true,
+    "completed": false,
     "createdAt": "2026-03-19T11:18:50.157Z",
     "descripcion": ""
   },
@@ -40,7 +40,7 @@
     "tipo": "Compra",
     "tarea": "Traje para fin de año",
     "prioridad": "media",
-    "completed": true,
+    "completed": false,
     "createdAt": "2026-03-19T11:18:50.058Z",
     "descripcion": ""
   },
@@ -67,7 +67,7 @@
     "tipo": "Trabajo",
     "tarea": "Presentar el prototipo de la página",
     "prioridad": "media",
-    "completed": true,
+    "completed": false,
     "createdAt": "2026-03-19T12:43:12.928Z",
     "descripcion": ""
   }

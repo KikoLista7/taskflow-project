@@ -1356,8 +1356,8 @@ function cambiarPrioridad(item, badge) {
   // Actualizar dataset del item
   item.dataset.prioridad = nuevaPrioridad;
 
-  // Actualizar apariencia del badge
-  badge.className = `prioridad-badge ${nuevoColor} text-white px-2 py-0.5 rounded text-xs whitespace-nowrap cursor-pointer hover:scale-110 transition-transform`;
+  // Actualizar apariencia del badge (mantener tipografía consistente)
+  badge.className = `prioridad-badge ${nuevoColor} text-white px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap cursor-pointer hover:scale-105 transition-all uppercase tracking-wide`;
   badge.textContent = nuevaPrioridad;
 
   // Actualizar borde del contenedor principal
