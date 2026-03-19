@@ -8,14 +8,13 @@ function toggleDark(){
   const boton = document.getElementById("modoBtn")
   if(document.documentElement.classList.contains("dark")){
     boton.textContent = "☀️"
-    localStorage.setItem("modo","dark")
   }else{
     boton.textContent = "🌙"
-    localStorage.setItem("modo","light")
   }
 }
 
 const taskContainer = document.getElementById("taskContainer")
+const mensajeVacio = document.getElementById("mensajeVacio")
 let tareas = []
 let ordenGrupos = []
 let sortableInstances = {};
@@ -88,7 +87,7 @@ function crearTareaObjeto(tipo, tarea, prioridad, completada = false, descripcio
  * Si hay errores, los anima visualmente en rojo y limpia los estilos tras el timeout.
  * @returns {void}
  */
-function agregarTarea(){
+async function agregarTarea(){
   const tipo = document.getElementById("tipoInput").value.trim();
   const tarea = document.getElementById("tareaInput").value.trim();
   const prioridad = document.getElementById("prioridadInput").value;
@@ -171,21 +170,29 @@ function agregarTarea(){
     return;
   }
 
-  // Crear objeto tarea
-  const nuevaTarea = crearTareaObjeto(tipo, tarea, prioridad);
-  tareas.push(nuevaTarea);
-  
-  // Renderizar en DOM
-  crearTareaEnDOM(nuevaTarea);
+  // Crear tarea en servidor
+  try {
+    const payload = { tipo, tarea, prioridad };
+    const created = await window.apiClient.createTask(payload);
+    tareas.push(created);
+    crearTareaEnDOM(created);
 
-  // Limpiar formulario
-  tipoInput.value = "";
-  tareaInput.value = "";
-  prioridadInput.value = "";
+    // Limpiar formulario
+    tipoInput.value = "";
+    tareaInput.value = "";
+    prioridadInput.value = "";
 
-  // Guardar cambios
-  guardarTareas();
-  guardarOrden();
+    // Actualizar UI
+    actualizarProgreso();
+    mostrarMensajeVacio();
+  } catch (err) {
+    console.error('Error creating task', err);
+    if (err.message === 'BAD_REQUEST') {
+      alert('Datos inválidos al crear la tarea');
+    } else {
+      alert('Error del servidor al crear la tarea');
+    }
+  }
 }
 
 /**
@@ -348,8 +355,8 @@ function crearTareaEnDOM(tareaObj, animacion = true) {
     const lista = grupo.querySelector(".lista");
     const { color, borde } = PRIORIDAD_COLORES[prioridad];
     const item = document.createElement("li");
-    item.className = `flex flex-col bg-white/10 dark:bg-black/10 p-3 rounded-lg backdrop-blur-md hover:bg-white/20 dark:hover:bg-black/20 transition`;
-    item.dataset.id = id;
+    // Lógico de estilo sin hover agressivo: no expandir al pasar el cursor
+    item.className = `flex flex-col bg-white/10 dark:bg-black/10 p-3 rounded-lg backdrop-blur-md transition-all duration-200 border border-transparent`;    item.dataset.id = id;
     item.dataset.tipo = tipo;
     item.dataset.tarea = tarea;
     item.dataset.prioridad = prioridad;
@@ -364,10 +371,10 @@ function crearTareaEnDOM(tareaObj, animacion = true) {
     contenidoPrincipal.innerHTML = `
 <div class="flex items-center gap-2 flex-1 min-w-0">
 <input type="checkbox" onclick="completarTarea(this)" class="cursor-pointer flex-shrink-0" ${completed ? 'checked' : ''}>
-<span class="tarea-texto break-words cursor-pointer hover:bg-white/10 dark:hover:bg-black/20 hover:px-2 hover:py-1 hover:rounded transition-all ${completed ? 'line-through opacity-50' : ''}" title="Clic para ver/ocultar descripción">${tarea}</span>
+<span class="tarea-texto break-words cursor-pointer ${completed ? 'line-through opacity-50' : ''}" title="Clic para ver/ocultar descripción">${tarea}</span>
 </div>
 <div class="flex items-center gap-2 flex-shrink-0">
-<span class="prioridad-badge ${color} text-white px-2 py-0.5 rounded text-xs whitespace-nowrap cursor-pointer hover:scale-110 transition-transform" title="Clic para cambiar prioridad">${prioridad}</span>
+<span class="prioridad-badge ${color} text-white px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap cursor-pointer uppercase tracking-wide" title="Clic para cambiar prioridad">${prioridad}</span>
 <button onclick="confirmarEliminarTarea(this)" class="text-red-500 hover:text-red-700 transition text-lg font-bold leading-none w-6 h-6 flex items-center justify-center">−</button>
 </div>
 `;
@@ -598,13 +605,22 @@ function editarGrupo(nombreActual) {
  * @returns {void}
  */
 function adjuntarListenersAlSpan(spanTarea, item) {
-  // Clic para mostrar/ocultar descripción
-  spanTarea.addEventListener("click", function () {
+
+  // Ampliar alcance: hacer que cualquier clic en la fila de la tarea abra la descripción
+  const contenidoPrincipal = item.querySelector(".flex.justify-between.items-center");
+  if (contenidoPrincipal) {
+    contenidoPrincipal.addEventListener("click", (e) => {
+      // Evitar activar al hacer clic en checkbox, prioridad o botones
+      const target = e.target;
+      if (target.closest("input[type='checkbox']")) return;
+      if (target.closest(".prioridad-badge")) return;
+      if (target.closest("button")) return;
       const descripcionCaja = item.querySelector(".descripcion-caja");
       if (descripcionCaja) {
-          descripcionCaja.classList.toggle("hidden");
+        descripcionCaja.classList.toggle("hidden");
       }
-  });
+    });
+  }
 
   // Doble clic para editar el título
   spanTarea.addEventListener("dblclick", function () {
@@ -728,16 +744,22 @@ function mostrarMensajeVacio(){
  * @param {HTMLLIElement} item - Elemento de lista del DOM a remover.
  * @returns {void}
  */
-function eliminarTarea(tipo, tarea, item){
-  tareas = tareas.filter(t => !(t.tipo === tipo && t.tarea === tarea));
-  guardarTareas();
-  guardarOrden();
-
+async function eliminarTarea(tipo, tarea, item){
+  const id = item.dataset.id;
+  // Optimista: quitar del DOM y luego solicitar eliminación al servidor
   item.remove();
-  actualizarProgreso();
-  cerrarModal();
   mostrarMensajeVacio();
   recalcularMaxHeights();
+  try {
+    await window.apiClient.deleteTask(id);
+    tareas = tareas.filter(t => t.id != id);
+    actualizarProgreso();
+    cerrarModal();
+  } catch (err) {
+    console.error('Error deleting task', err);
+    // Mostrar feedback mínimo al usuario
+    alert('No se pudo eliminar la tarea en el servidor');
+  }
 }
 
 /**
@@ -747,15 +769,19 @@ function eliminarTarea(tipo, tarea, item){
  * @returns {void}
  */
 function eliminarGrupo(tipo){
-  tareas = tareas.filter(t => t.tipo !== tipo);
-  guardarTareas();
-  guardarOrden();
-
-  document.getElementById("grupo-" + tipo).remove();
-  actualizarProgreso();
-  cerrarModal();
-  mostrarMensajeVacio();
-  recalcularMaxHeights();
+  (async () => {
+    const ids = tareas.filter(t => t.tipo === tipo).map(t => t.id);
+    for (const id of ids) {
+      try { await window.apiClient.deleteTask(id); } catch(e){ console.warn('No se pudo eliminar tarea', id, e); }
+    }
+    tareas = tareas.filter(t => t.tipo !== tipo);
+    const el = document.getElementById("grupo-" + tipo);
+    if (el) el.remove();
+    actualizarProgreso();
+    cerrarModal();
+    mostrarMensajeVacio();
+    recalcularMaxHeights();
+  })();
 }
 
 /**
@@ -862,7 +888,30 @@ function cerrarModal(){
  * @returns {void}
  */
 function guardarTareas(){
-  localStorage.setItem("tareas", JSON.stringify(tareas));
+  // Sincronizar cambios de tareas individuales con el servidor.
+  (async () => {
+    try {
+      const promises = tareas.map(t => {
+        const payload = {
+          tipo: t.tipo,
+          tarea: t.tarea,
+          prioridad: t.prioridad,
+          completed: !!t.completed,
+          descripcion: t.descripcion || ''
+        };
+        return window.apiClient.updateTask(t.id, payload).then(updated => {
+          // actualizar en el array local
+          const idx = tareas.findIndex(x => x.id === updated.id);
+          if (idx !== -1) tareas[idx] = updated;
+        }).catch(err => {
+          console.warn('No se pudo actualizar tarea', t.id, err);
+        });
+      });
+      await Promise.all(promises);
+    } catch (e) {
+      console.warn('Error sincronizando tareas', e);
+    }
+  })();
 }
 
 /**
@@ -889,15 +938,26 @@ function guardarOrden(){
   const ordenGruposActual = grupos.map(g => {
     const tipo = g.dataset.tipo
     const lista = Array.from(g.querySelectorAll("li"))
-    const tareasOrden = lista.map(li => ({
-      tipo: li.dataset.tipo,
-      tarea: li.dataset.tarea,
-      prioridad: li.dataset.prioridad
-    }))
-    return {tipo, tareasOrden}
+    const ids = lista.map(li => li.dataset.id)
+    return { tipo, ids }
   })
   ordenGrupos = ordenGruposActual;
-  localStorage.setItem("ordenGrupos", JSON.stringify(ordenGrupos))
+  // Enviar orden al servidor para persistencia
+  (async () => {
+    try {
+      const updated = await window.apiClient.saveOrder(ordenGruposActual);
+      if (Array.isArray(updated)) {
+        tareas = updated;
+        // El DOM ya refleja el orden (Sortable). Evitamos un re-render completo
+        // para que no parezca un "refresh" en cada cambio.
+        actualizarProgreso();
+        mostrarMensajeVacio();
+        recalcularMaxHeights();
+      }
+    } catch (err) {
+      console.warn('No se pudo guardar el orden en el servidor', err);
+    }
+  })();
 }
 
 /**
@@ -906,22 +966,18 @@ function guardarOrden(){
  * @returns {void}
  */
 function cargarOrden(){
-  const datos = localStorage.getItem("ordenGrupos");
-  if(datos){
-    ordenGrupos = JSON.parse(datos);
-    // Limpiamos el contenedor para evitar duplicados al cargar
-    taskContainer.innerHTML = ''; 
-    ordenGrupos.forEach(grupo => {
-      grupo.tareasOrden.forEach(t => {
-        // Buscamos la tarea completa en nuestro array de tareas
-        const tareaObj = tareas.find(tarea => tarea.tipo === t.tipo && tarea.tarea === t.tarea);
-        if(tareaObj){
-          // Pasamos el objeto completo
-          crearTareaEnDOM(tareaObj, false);
-        }
-      });
-    });
-  }
+  // Reconstruir orden a partir del DOM actual (no se persiste en LocalStorage)
+  const grupos = Array.from(document.querySelectorAll("[id^='grupo-']"));
+  ordenGrupos = grupos.map(g => {
+    const tipo = g.dataset.tipo;
+    const lista = Array.from(g.querySelectorAll("li"));
+    const tareasOrden = lista.map(li => ({
+      tipo: li.dataset.tipo,
+      tarea: li.dataset.tarea,
+      prioridad: li.dataset.prioridad
+    }));
+    return { tipo, tareasOrden };
+  });
 }
 
 /**
@@ -929,10 +985,29 @@ function cargarOrden(){
  * Si no hay datos almacenados, el array permanece vacío.
  * @returns {void}
  */
-function cargarTareas(){
-  const datos = localStorage.getItem("tareas");
-  if (datos) {
-    tareas = JSON.parse(datos);
+async function cargarTareas(){
+  try{
+    // Estado de carga
+    if (mensajeVacio) {
+      mensajeVacio.textContent = 'Cargando tareas...';
+      mensajeVacio.classList.remove('hidden');
+    }
+
+    const datos = await window.apiClient.fetchTasks();
+    tareas = datos || [];
+    taskContainer.innerHTML = '';
+    tareas.forEach(t => crearTareaEnDOM(t, false));
+    mostrarMensajeVacio();
+    actualizarProgreso();
+  }catch(err){
+    console.error('Error cargando tareas desde servidor', err);
+    tareas = [];
+    if (mensajeVacio) {
+      mensajeVacio.textContent = 'No se pudieron cargar las tareas. Inténtalo de nuevo más tarde.';
+      mensajeVacio.classList.remove('hidden');
+    } else {
+      mostrarMensajeVacio();
+    }
   }
 }
 
@@ -942,26 +1017,29 @@ function cargarTareas(){
  * Incluye tareas de categorías: Compra, Ejercicio, Trabajo.
  * @returns {void}
  */
-function cargarTareasIniciales(){
+async function cargarTareasIniciales(){
   const tareasIniciales = [
-    crearTareaObjeto("Compra", "Verduras", "baja"),
-    crearTareaObjeto("Compra", "Detergente", "media"),
-    crearTareaObjeto("Compra", "Traje para fin de año", "alta"),
-    crearTareaObjeto("Ejercicio", "Salir a correr 10 km", "media"),
-    crearTareaObjeto("Ejercicio", "Ir al gimnasio por la mañana", "alta"),
-    crearTareaObjeto("Ejercicio", "Partido de pádel el finde", "baja"),
-    crearTareaObjeto("Trabajo", "Terminar el proyecto antes del viernes", "alta"),
-    crearTareaObjeto("Trabajo", "Presentar el prototipo de la página", "media")
+    { tipo: "Compra", tarea: "Verduras", prioridad: "baja" },
+    { tipo: "Compra", tarea: "Detergente", prioridad: "media" },
+    { tipo: "Compra", tarea: "Traje para fin de año", prioridad: "alta" },
+    { tipo: "Ejercicio", tarea: "Salir a correr 10 km", prioridad: "media" },
+    { tipo: "Ejercicio", tarea: "Ir al gimnasio por la mañana", prioridad: "alta" },
+    { tipo: "Ejercicio", tarea: "Partido de pádel el finde", prioridad: "baja" },
+    { tipo: "Trabajo", tarea: "Terminar el proyecto antes del viernes", prioridad: "alta" },
+    { tipo: "Trabajo", tarea: "Presentar el prototipo de la página", prioridad: "media" }
   ];
 
-  tareas.push(...tareasIniciales);
-
-  tareasIniciales.forEach(tarea => {
-    crearTareaEnDOM(tarea, false);
-  });
-
-  guardarTareas();
-  guardarOrden();
+  for (const t of tareasIniciales) {
+    try {
+      const created = await window.apiClient.createTask(t);
+      tareas.push(created);
+      crearTareaEnDOM(created, false);
+    } catch (err) {
+      console.warn('No se pudo crear tarea inicial', err);
+    }
+  }
+  mostrarMensajeVacio();
+  actualizarProgreso();
 }
 
 /**
@@ -1198,21 +1276,25 @@ function agregarSubtarea(tipo) {
           return;
       }
 
-      // Crear y guardar tarea
-      const nuevaTarea = crearTareaObjeto(tipo, textoSubtarea, "baja");
-      tareas.push(nuevaTarea);
-      crearTareaEnDOM(nuevaTarea);
-      guardarTareas();
-      guardarOrden();
-      
-      // Restaurar el botón
-      const nuevoBoton = crearBotonAgregarSubtarea(tipo);
-      inputContainer.replaceWith(nuevoBoton);
-      
-      // Recalcular maxHeight después de que el DOM se actualice
-      setTimeout(() => {
-        recalcularMaxHeights();
-      }, 50);
+      // Crear y guardar tarea en servidor, luego renderizar y actualizar orden
+      const payload = { tipo, tarea: textoSubtarea, prioridad: "baja" };
+      window.apiClient.createTask(payload)
+        .then(created => {
+          tareas.push(created);
+          crearTareaEnDOM(created);
+          // Persistir el orden en servidor
+          guardarOrden();
+          // Restaurar el botón
+          const nuevoBoton = crearBotonAgregarSubtarea(tipo);
+          inputContainer.replaceWith(nuevoBoton);
+          // Recalcular maxHeight después de que el DOM se actualice
+          setTimeout(() => recalcularMaxHeights(), 50);
+        })
+        .catch(err => {
+          // En caso de fallo, volver al estado del botón
+          const nuevoBoton = crearBotonAgregarSubtarea(tipo);
+          inputContainer.replaceWith(nuevoBoton);
+        });
   };
 
   const cancelar = () => {
@@ -1290,9 +1372,8 @@ function cambiarPrioridad(item, badge) {
   if (tareaObj) {
       tareaObj.prioridad = nuevaPrioridad;
       guardarTareas();
-      guardarOrden();
   }
-  
+
   recalcularMaxHeights();
 }
 
@@ -1301,26 +1382,21 @@ function cambiarPrioridad(item, badge) {
  * @returns {void}
  */
 function inicializarModo() {
-  if (localStorage.getItem("modo") === "dark") {
-    document.documentElement.classList.add("dark");
-    document.getElementById("modoBtn").textContent = "☀️";
-  }
+  // No se utiliza LocalStorage; ajustamos el botón según el estado actual
+  const btn = document.getElementById("modoBtn");
+  if (btn) btn.textContent = document.documentElement.classList.contains("dark") ? "☀️" : "🌙";
 }
 
 /**
  * Carga las tareas desde localStorage o inicializa con tareas de demo.
  * @returns {void}
  */
-function inicializarTareas() {
-  const tareasGuardadas = localStorage.getItem("tareas");
-  
-  if (tareasGuardadas === null) {
-    cargarTareasIniciales();
-  } else {
-    cargarTareas();
-    cargarOrden();
+async function inicializarTareas() {
+  await cargarTareas();
+  if (!tareas || tareas.length === 0) {
+    await cargarTareasIniciales();
   }
-  
+  cargarOrden();
   mostrarMensajeVacio();
 }
 
@@ -1500,4 +1576,20 @@ window.onload = function() {
   inicializarDragAndDrop();
   inicializarToggleSidebar();
   inicializarManejadorRedimensionamiento();
+  // Inicializa delegación de clics para abrir descripciones
+  bindTaskRowClickDelegation();
 };
+
+// Delegación simple para abrir/ocultar la descripción de cada tarea al hacer clic en la fila
+function bindTaskRowClickDelegation() {
+  const container = document.getElementById('taskContainer');
+  if (!container) return;
+  container.addEventListener('click', function(e) {
+    const li = e.target.closest('li');
+    if (!li) return;
+    // Ignorar clicks en checkbox, badge de prioridad o botones
+    if (e.target.closest("input[type='checkbox']") || e.target.closest('.prioridad-badge') || e.target.closest('button')) return;
+    const desc = li.querySelector('.descripcion-caja');
+    if (desc) desc.classList.toggle('hidden');
+  });
+}

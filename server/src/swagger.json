@@ -1,0 +1,219 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "TaskFlow API",
+    "version": "1.0.0",
+    "description": "API REST para gestionar tareas de TaskFlow."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Servidor local de desarrollo"
+    }
+  ],
+  "paths": {
+    "/api/v1/tasks": {
+      "get": {
+        "summary": "Listar todas las tareas",
+        "responses": {
+          "200": {
+            "description": "Listado de tareas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Task"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor"
+          }
+        }
+      },
+      "post": {
+        "summary": "Crear una nueva tarea",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewTask"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Tarea creada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Task"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos inválidos"
+          },
+          "500": {
+            "description": "Error interno del servidor"
+          }
+        }
+      }
+    },
+    "/api/v1/tasks/order": {
+      "put": {
+        "summary": "Reordenar tareas por grupos",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "tipo": {
+                      "type": "string"
+                    },
+                    "ids": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "required": ["tipo", "ids"]
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Orden actualizado correctamente"
+          },
+          "400": {
+            "description": "Formato de orden inválido"
+          },
+          "500": {
+            "description": "Error interno del servidor"
+          }
+        }
+      }
+    },
+    "/api/v1/tasks/{id}": {
+      "patch": {
+        "summary": "Actualizar una tarea",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTask"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Tarea actualizada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Task"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos inválidos"
+          },
+          "404": {
+            "description": "Tarea no encontrada"
+          },
+          "500": {
+            "description": "Error interno del servidor"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Eliminar una tarea",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Tarea eliminada correctamente"
+          },
+          "404": {
+            "description": "Tarea no encontrada"
+          },
+          "500": {
+            "description": "Error interno del servidor"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Task": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "tipo": { "type": "string" },
+          "tarea": { "type": "string" },
+          "prioridad": { "type": "string", "enum": ["baja", "media", "alta", null] },
+          "completed": { "type": "boolean" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "descripcion": { "type": "string" }
+        },
+        "required": ["id", "tipo", "tarea", "completed", "createdAt"]
+      },
+      "NewTask": {
+        "type": "object",
+        "properties": {
+          "tipo": { "type": "string" },
+          "tarea": { "type": "string" },
+          "prioridad": { "type": "string", "enum": ["baja", "media", "alta", null] },
+          "descripcion": { "type": "string" }
+        },
+        "required": ["tipo", "tarea"]
+      },
+      "UpdateTask": {
+        "type": "object",
+        "properties": {
+          "tipo": { "type": "string" },
+          "tarea": { "type": "string" },
+          "prioridad": { "type": "string", "enum": ["baja", "media", "alta", null] },
+          "completed": { "type": "boolean" },
+          "descripcion": { "type": "string" }
+        }
+      }
+    }
+  }
+}
+

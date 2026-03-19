@@ -1,0 +1,74 @@
+[
+  {
+    "id": "1773920873943",
+    "tipo": "Comida",
+    "tarea": "Arroz",
+    "prioridad": "alta",
+    "completed": true,
+    "createdAt": "2026-03-19T11:47:53.943Z",
+    "descripcion": ""
+  },
+  {
+    "id": "1773926583168",
+    "tipo": "Comida",
+    "tarea": "Macarrones",
+    "prioridad": "baja",
+    "completed": true,
+    "createdAt": "2026-03-19T13:23:03.168Z",
+    "descripcion": ""
+  },
+  {
+    "id": "1773919130157",
+    "tipo": "Ejercicio",
+    "tarea": "Salir a correr 10 km",
+    "prioridad": "media",
+    "completed": true,
+    "createdAt": "2026-03-19T11:18:50.157Z",
+    "descripcion": ""
+  },
+  {
+    "id": "1773926578236",
+    "tipo": "Ejercicio",
+    "tarea": "Pádel",
+    "prioridad": "baja",
+    "completed": false,
+    "createdAt": "2026-03-19T13:22:58.236Z",
+    "descripcion": ""
+  },
+  {
+    "id": "1773919130058",
+    "tipo": "Compra",
+    "tarea": "Traje para fin de año",
+    "prioridad": "media",
+    "completed": true,
+    "createdAt": "2026-03-19T11:18:50.058Z",
+    "descripcion": ""
+  },
+  {
+    "id": "1773919129973",
+    "tipo": "Compra",
+    "tarea": "Verduras",
+    "prioridad": "baja",
+    "completed": false,
+    "createdAt": "2026-03-19T11:18:49.973Z",
+    "descripcion": ""
+  },
+  {
+    "id": "1773919129987",
+    "tipo": "Compra",
+    "tarea": "Detergente",
+    "prioridad": "media",
+    "completed": false,
+    "createdAt": "2026-03-19T11:18:49.987Z",
+    "descripcion": ""
+  },
+  {
+    "id": "1773924192928",
+    "tipo": "Trabajo",
+    "tarea": "Presentar el prototipo de la página",
+    "prioridad": "media",
+    "completed": true,
+    "createdAt": "2026-03-19T12:43:12.928Z",
+    "descripcion": ""
+  }
+]

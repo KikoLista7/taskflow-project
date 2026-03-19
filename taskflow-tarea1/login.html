@@ -107,7 +107,6 @@ function validarContraseña(password) {
 function toggleDarkLogin() {
   document.documentElement.classList.toggle("dark");
   const isDark = document.documentElement.classList.contains("dark");
-  localStorage.setItem(LOGIN_CONFIG.storageKeys.modo, isDark ? "dark" : "light");
   
   const boton = document.getElementById("modoLoginBtn");
   if (boton) {
@@ -168,15 +167,7 @@ function manejarLogin(event) {
     return;
   }
 
-  // Guardar preferencia de recordar correo
-  if (rememberCheckbox.checked) {
-    localStorage.setItem(LOGIN_CONFIG.storageKeys.email, email);
-  } else {
-    localStorage.removeItem(LOGIN_CONFIG.storageKeys.email);
-  }
-
-  // Simular autenticación (en producción, esto sería una petición real al servidor)
-  localStorage.setItem(LOGIN_CONFIG.storageKeys.autenticado, "1");
+  // Nota: no se persiste en LocalStorage; esto es una simulación local
 
   // Mostrar estado de carga
   submitBtn.disabled = true;
@@ -194,12 +185,7 @@ function manejarLogin(event) {
  * @returns {void}
  */
 function inicializarPaginaLogin() {
-  // Sincronizar modo oscuro desde localStorage
-  const modo = localStorage.getItem(LOGIN_CONFIG.storageKeys.modo);
-  if (modo === "dark") {
-    document.documentElement.classList.add("dark");
-  }
-  
+  // Sin persistencia de preferencias; ajustar icono según estado actual
   const toggleBtn = document.getElementById("modoLoginBtn");
   if (toggleBtn) {
     toggleBtn.textContent = document.documentElement.classList.contains("dark") ? "☀️" : "🌙";
@@ -210,15 +196,7 @@ function inicializarPaginaLogin() {
   if (form) {
     form.addEventListener("submit", manejarLogin);
   }
-
-  // Restaurar email guardado si existe
-  const savedEmail = localStorage.getItem(LOGIN_CONFIG.storageKeys.email);
-  if (savedEmail) {
-    const emailInput = document.getElementById("email");
-    const rememberCheckbox = document.getElementById("recordar");
-    if (emailInput) emailInput.value = savedEmail;
-    if (rememberCheckbox) rememberCheckbox.checked = true;
-  }
+  // No se restaura email (no se usa LocalStorage)
 }
 
 // ==================== INICIALIZACIÓN ====================

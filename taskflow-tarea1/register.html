@@ -136,7 +136,6 @@ function validarContraseñasCoinciden(password1, password2) {
 function toggleDarkRegister() {
   document.documentElement.classList.toggle("dark");
   const isDark = document.documentElement.classList.contains("dark");
-  localStorage.setItem(REGISTER_CONFIG.storageKeys.modo, isDark ? "dark" : "light");
   
   const boton = document.getElementById("modoRegisterBtn");
   if (boton) {
@@ -231,8 +230,7 @@ function manejarRegistro(event) {
     return;
   }
 
-  // Demo: guardar email y redirigir al login (en producción, enviaríamos a la base de datos)
-  localStorage.setItem(REGISTER_CONFIG.storageKeys.email, email);
+  // Demo: redirigir al login (no se persiste en LocalStorage)
   window.location.href = "login.html";
 }
 
@@ -242,12 +240,7 @@ function manejarRegistro(event) {
  * @returns {void}
  */
 function inicializarPaginaRegister() {
-  // Sincronizar modo oscuro desde localStorage
-  const modo = localStorage.getItem(REGISTER_CONFIG.storageKeys.modo);
-  if (modo === "dark") {
-    document.documentElement.classList.add("dark");
-  }
-  
+  // Ajustar icono del modo según estado actual (no se lee LocalStorage)
   const toggleBtn = document.getElementById("modoRegisterBtn");
   if (toggleBtn) {
     toggleBtn.textContent = document.documentElement.classList.contains("dark") ? "☀️" : "🌙";

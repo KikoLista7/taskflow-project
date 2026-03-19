@@ -1,0 +1,22 @@
+{
+  "name": "taskflow-project",
+  "version": "1.0.0",
+  "description": "Taskflow es una aplicación sencilla para gestionar tareas pendientes (todos).   Permite crear, completar y conservar tus tareas entre recargas del navegador, facilitando el seguimiento de tu trabajo diario.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev:server": "cd server && npm run dev"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KikoLista7/taskflow-project.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/KikoLista7/taskflow-project/issues"
+  },
+  "homepage": "https://github.com/KikoLista7/taskflow-project#readme"
+}
