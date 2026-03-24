@@ -1,20 +1,20 @@
 [
   {
-    "id": "1773920873943",
-    "tipo": "Comida",
-    "tarea": "Arroz",
-    "prioridad": "baja",
-    "completed": false,
-    "createdAt": "2026-03-19T11:47:53.943Z",
-    "descripcion": ""
-  },
-  {
     "id": "1773926583168",
     "tipo": "Comida",
     "tarea": "Macarrones",
     "prioridad": "alta",
-    "completed": false,
+    "completed": true,
     "createdAt": "2026-03-19T13:23:03.168Z",
+    "descripcion": ""
+  },
+  {
+    "id": "1773920873943",
+    "tipo": "Comida",
+    "tarea": "Arroz",
+    "prioridad": "alta",
+    "completed": false,
+    "createdAt": "2026-03-19T11:47:53.943Z",
     "descripcion": ""
   },
   {
@@ -36,6 +36,15 @@
     "descripcion": ""
   },
   {
+    "id": "1773919129973",
+    "tipo": "Compra",
+    "tarea": "Verduras",
+    "prioridad": "baja",
+    "completed": true,
+    "createdAt": "2026-03-19T11:18:49.973Z",
+    "descripcion": ""
+  },
+  {
     "id": "1773919130058",
     "tipo": "Compra",
     "tarea": "Traje para fin de año",
@@ -45,20 +54,11 @@
     "descripcion": ""
   },
   {
-    "id": "1773919129973",
-    "tipo": "Compra",
-    "tarea": "Verduras",
-    "prioridad": "baja",
-    "completed": false,
-    "createdAt": "2026-03-19T11:18:49.973Z",
-    "descripcion": ""
-  },
-  {
     "id": "1773919129987",
     "tipo": "Compra",
     "tarea": "Detergente",
     "prioridad": "media",
-    "completed": false,
+    "completed": true,
     "createdAt": "2026-03-19T11:18:49.987Z",
     "descripcion": ""
   },
@@ -67,7 +67,7 @@
     "tipo": "Trabajo",
     "tarea": "Presentar el prototipo de la página",
     "prioridad": "media",
-    "completed": false,
+    "completed": true,
     "createdAt": "2026-03-19T12:43:12.928Z",
     "descripcion": ""
   }
