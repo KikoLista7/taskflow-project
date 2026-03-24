@@ -1,7 +1,9 @@
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
 
-const DATA_DIR = path.join(__dirname, '..', '..', 'data');
+const isVercel = process.env.VERCEL === '1';
+const DATA_DIR = isVercel ? os.tmpdir() : path.join(__dirname, '..', '..', 'data');
 const DATA_FILE = path.join(DATA_DIR, 'tasks.json');
 
 let tasks = [];

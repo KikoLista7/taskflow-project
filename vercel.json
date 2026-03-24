@@ -4,12 +4,20 @@
     {
       "src": "server/src/index.js",
       "use": "@vercel/node"
+    },
+    {
+      "src": "taskflow-tarea1/**",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
     {
-      "src": "/(.*)",
+      "src": "/api/(.*)",
       "dest": "server/src/index.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "taskflow-tarea1/$1"
     }
   ]
 }

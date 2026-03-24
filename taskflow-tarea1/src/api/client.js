@@ -1,5 +1,6 @@
 (function(){
-  const BASE = 'http://localhost:3000/api/v1/tasks';
+  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const BASE = isLocalhost ? 'http://localhost:3000/api/v1/tasks' : '/api/v1/tasks';
 
   async function fetchTasks() {
     const res = await fetch(BASE);
