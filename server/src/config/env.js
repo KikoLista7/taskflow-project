@@ -1,9 +1,7 @@
 require('dotenv').config();
 
-if (!process.env.PORT) {
-  throw new Error('El puerto no está definido');
-}
+const port = process.env.PORT || 3000;
 
 module.exports = {
-  port: Number(process.env.PORT)
+  port: Number(port)
 };

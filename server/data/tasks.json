@@ -22,7 +22,7 @@
     "tipo": "Ejercicio",
     "tarea": "Salir a correr 10 km",
     "prioridad": "media",
-    "completed": false,
+    "completed": true,
     "createdAt": "2026-03-19T11:18:50.157Z",
     "descripcion": ""
   },
@@ -31,7 +31,7 @@
     "tipo": "Ejercicio",
     "tarea": "Pádel",
     "prioridad": "baja",
-    "completed": false,
+    "completed": true,
     "createdAt": "2026-03-19T13:22:58.236Z",
     "descripcion": ""
   },
